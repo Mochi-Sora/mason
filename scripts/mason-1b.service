@@ -1,0 +1,14 @@
+[Unit]
+Description=Mason local 1B (llama.cpp server for memory/evolution/predictor)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/custom-agent
+Environment=LD_LIBRARY_PATH=/usr/local/lib/ollama
+ExecStart=/usr/local/lib/ollama/llama-server -m %h/custom-agent/custom_memory/llm/models/qwen2-0_5b-instruct-q4_k_m.gguf --port 8080 --ctx-size 4096 -t 4
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -23,24 +23,35 @@ class LlamaClient:
         self._llama = None
 
     def _try_server(self, prompt: str, max_tokens=256, temperature=0.2, stop=None,
-                    timeout: int = 10) -> str | None:
-        url = f"{self.base_url}/v1/completions"
-        # Default stop (blank line) keeps JSON one-liners tight; multi-paragraph
-        # tasks (nightly report) must pass stop=[] or lose everything past ¶1.
-        body: dict = {"prompt": prompt, "max_tokens": max_tokens, "temperature": temperature,
+                    timeout: int = 120) -> str | None:
+        # Chat endpoint first (applies the model's chat template — dramatically
+        # better instruction-following on small instruct models), legacy
+        # /v1/completions as fallback. Local CPU runs ~1 tok/s; the generous
+        # timeout avoids silently degrading to the no-op fallback.
+        body: dict = {"max_tokens": max_tokens, "temperature": temperature,
                       "stop": ["\n\n"] if stop is None else stop}
         if self.model:
             body["model"] = self.model
-        try:
-            req = urllib.request.Request(url, data=json.dumps(body).encode(),
-                                         headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                j = json.loads(r.read().decode())
-                if "choices" in j:
-                    return j["choices"][0].get("text","")
-                return j.get("content","")
-        except Exception:
-            return None
+        chat = dict(body, messages=[{"role": "user", "content": prompt}])
+        for path, payload, pick in (
+            ("/v1/chat/completions", chat, ("message", "content")),
+            ("/v1/completions", dict(body, prompt=prompt), ("text",)),
+        ):
+            try:
+                req = urllib.request.Request(
+                    f"{self.base_url}{path}", data=json.dumps(payload).encode(),
+                    headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    j = json.loads(r.read().decode())
+                if "choices" in j and j["choices"]:
+                    node = j["choices"][0]
+                    for key in pick:
+                        node = (node.get(key) or {}) if isinstance(node, dict) else {}
+                    if isinstance(node, str) and node.strip():
+                        return node
+            except Exception:
+                continue
+        return None
 
     def _try_python(self, prompt: str, max_tokens=256, temperature=0.2) -> str | None:
         try:
@@ -55,7 +66,7 @@ class LlamaClient:
             return None
 
     def complete(self, prompt: str, max_tokens=256, temperature=0.2, stop=None,
-                 timeout: int = 10) -> str:
+                 timeout: int = 120) -> str:
         # 1) server
         r = self._try_server(prompt, max_tokens, temperature, stop, timeout)
         if r:
