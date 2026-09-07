@@ -1,0 +1,19 @@
+{
+ "type": "function",
+ "function": {
+  "name": "close_terminal",
+  "description": "Hide a background process's terminal tab (process keeps running) in the Mason desktop GUI (the tabs mirroring terminal(background=true) runs). This does NOT kill the process — it only drops the tab/view; the output keeps buffering and the user can reopen it from the status stack. Use it to tidy up when a background process's live terminal is no longer worth showing. To actually stop the process, use process(action='kill') instead.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "process_id": {
+     "type": "string",
+     "description": "The background process's session id (from terminal(background=true) output or process(action='list')) whose tab should be closed."
+    }
+   },
+   "required": [
+    "process_id"
+   ]
+  }
+ }
+}

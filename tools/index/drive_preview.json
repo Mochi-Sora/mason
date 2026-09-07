@@ -1,0 +1,71 @@
+{
+ "type": "function",
+ "function": {
+  "name": "drive_preview",
+  "description": "Use the web page open in the desktop preview pane (the one `desktop_preview` opens): log in, fill forms, click through flows. ALWAYS start with action='elements' — it inventories clickable/typable things as refs ('btn-sign-in') with role/label/value; act by ref, not guessed selectors. Refs survive re-renders and only die on navigation (you'll be told they're stale — call elements again). After the first full inventory, actions answer with a DELTA: 'added' in full, 'changed' as ref + moved fields, 'removed'/'rebound' as ref lists ('rebound' needs nothing from you — the ref already follows the rebuilt element). Anything unmentioned is unchanged; do not re-read to check. Input is real (pointer travels, hover menus open). Actions: elements, click, hover (park the pointer — opens dropdowns before clicking in), type (submit=true also presses Enter), scroll, press, strobe (visual flourish only — one call runs a multi-second burst; never loop it), back/forward/reload. Moves draw live and fade; annotate_preview leaves a lasting mark. Page text only: desktop_preview action=read. Separate automated browser: browser_* tools.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "elements",
+      "click",
+      "hover",
+      "type",
+      "scroll",
+      "press",
+      "strobe",
+      "back",
+      "forward",
+      "reload"
+     ],
+     "description": "Start with 'elements'."
+    },
+    "ref": {
+     "type": "string",
+     "description": "Element ref from an earlier elements call."
+    },
+    "selector": {
+     "type": "string",
+     "description": "CSS selector fallback. Prefer ref."
+    },
+    "text": {
+     "type": "string",
+     "description": "type: the text."
+    },
+    "submit": {
+     "type": "boolean",
+     "description": "type: press Enter + submit the form after."
+    },
+    "key": {
+     "type": "string",
+     "description": "press: key name ('Enter', 'Escape', 'ArrowDown')."
+    },
+    "amount": {
+     "type": "integer",
+     "description": "scroll: pixels (negative = up; default ~one screen)."
+    },
+    "to": {
+     "type": "string",
+     "enum": [
+      "top",
+      "bottom"
+     ],
+     "description": "scroll: jump to top/bottom instead."
+    },
+    "max": {
+     "type": "integer",
+     "description": "elements: cap the inventory."
+    },
+    "full": {
+     "type": "boolean",
+     "description": "elements: full re-read instead of a delta. Rarely needed."
+    }
+   },
+   "required": [
+    "action"
+   ]
+  }
+ }
+}

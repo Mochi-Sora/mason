@@ -1,0 +1,1593 @@
+/*
+ * Mason Kanban — dashboard plugin styles.
+ *
+ * All colors reference theme CSS vars so the board reskins with the
+ * active dashboard theme. No hardcoded palette.
+ */
+
+.mason-kanban {
+  width: 100%;
+}
+
+/* ---- Code/pre reset (theme-immune default) --------------------------- *
+ *
+ * Themes (shipped AND user-installable) routinely paint every <code> and
+ * <pre> on the page with an opaque accent-color fill. That's fine for a
+ * Markdown doc page; it's wrong for the kanban plugin, which uses <code>
+ * for event payloads, run metadata, log panes, and similar raw-data
+ * surfaces that must read as plain text on the board's own background.
+ *
+ * Rather than play whack-a-mole with theme rules (the pre-#21086 approach
+ * was a single ``.mason-kanban code { background: transparent }`` rule
+ * that lost specificity fights in the drawer context), reset EVERY
+ * <code>/<pre> inside the kanban plugin container to transparent with
+ * ``!important``, then opt back in ONLY on the class that carries
+ * intentional styling (``.mason-kanban-md code``, the inline code pill
+ * inside rendered task-body Markdown).
+ *
+ * Net effect: any new theme, shipped or third-party, can introduce
+ * whatever global code-fill rule it wants — kanban surfaces stay clean
+ * unless the theme deliberately targets our internal class names.
+ * Regression coverage: #21086 (task-drawer event payloads unreadable
+ * across every shipped theme).
+ */
+.mason-kanban code,
+.mason-kanban pre,
+.mason-kanban-drawer code,
+.mason-kanban-drawer pre {
+  background: transparent !important;
+  color: inherit;
+}
+/* The Markdown renderer intentionally paints a subtle code pill behind
+ * inline ``<code>`` inside task-body prose — but NOT inside a fenced
+ * block (those are a ``<pre class="mason-kanban-md-code">`` with a
+ * bare ``<code>`` inside, and the pill would double up with the pre
+ * background). ``:not()`` scopes this opt-back-in to inline code only.
+ *
+ * Uses ``color-mix(currentColor ...)`` rather than ``--color-foreground``
+ * so the pill renders consistently even when a theme forgets to set
+ * ``--color-foreground`` (pre-existing safeguard from #18576).
+ */
+.mason-kanban .mason-kanban-md code:not(.mason-kanban-md-code *) {
+  background: color-mix(in srgb, currentColor 8%, transparent) !important;
+}
+/* Tighten contrast on the drawer-specific payload class — it lives on
+ * its own line in the events list, so matching the muted-foreground
+ * color keeps it visually distinct from the event title without
+ * screaming for attention. */
+.mason-kanban-event-payload,
+.mason-kanban-drawer .mason-kanban-event-payload {
+  color: var(--color-muted-foreground) !important;
+}
+
+/* ---- Columns layout -------------------------------------------------- */
+
+.mason-kanban-columns {
+  display: flex;
+  gap: 0.75rem;
+  align-items: start;
+  overflow-x: auto;
+}
+
+.mason-kanban-columns--scrollable {
+  cursor: grab;
+}
+
+.mason-kanban-columns--panning,
+.mason-kanban-columns--panning * {
+  cursor: grabbing !important;
+}
+
+.mason-kanban-column {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  background: color-mix(in srgb, var(--color-card) 85%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  min-height: 200px;
+  max-height: calc(100vh - 220px);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.mason-kanban-column--drop {
+  border-color: var(--color-ring);
+  background: color-mix(in srgb, var(--color-ring) 8%, var(--color-card));
+}
+
+.mason-kanban-column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0.35rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-foreground);
+}
+
+.mason-kanban-column-label {
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.mason-kanban-column-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.mason-kanban-column-add {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  border-radius: var(--radius-sm, 0.25rem);
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.mason-kanban-column-add:hover {
+  background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+}
+
+.mason-kanban-column-sub {
+  padding: 0 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  margin-bottom: 0.5rem;
+}
+
+.mason-kanban-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  overflow-y: auto;
+  padding-right: 0.1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.mason-kanban-empty {
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+  border: 1px dashed color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+/* ---- Status dots ----------------------------------------------------- */
+
+.mason-kanban-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--color-muted-foreground);
+}
+.mason-kanban-dot-triage   { background: #b47dd6; }  /* lilac — fresh/unspecified */
+.mason-kanban-dot-todo     { background: var(--color-muted-foreground); }
+.mason-kanban-dot-ready    { background: #d4b348; }  /* amber */
+.mason-kanban-dot-running  { background: #3fb97d; }  /* green */
+.mason-kanban-dot-blocked  { background: var(--color-destructive, #d14a4a); }
+.mason-kanban-dot-review   { background: #48b0c4; }  /* cyan — awaiting review */
+.mason-kanban-dot-done     { background: #4a8cd1; }  /* blue */
+.mason-kanban-dot-archived { background: var(--color-border); }
+
+/* ---- Progress pill (N/M child tasks done) --------------------------- */
+
+.mason-kanban-progress {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.62rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+  color: var(--color-muted-foreground);
+  letter-spacing: 0.02em;
+}
+.mason-kanban-progress--full {
+  background: color-mix(in srgb, #3fb97d 22%, transparent);
+  border-color: color-mix(in srgb, #3fb97d 45%, transparent);
+  color: var(--color-foreground);
+}
+
+/* ---- Lanes (per-profile sub-grouping inside Running) ---------------- */
+
+.mason-kanban-lane {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.25rem 0 0.35rem;
+  border-top: 1px dashed color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+.mason-kanban-lane:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.mason-kanban-lane-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  /* Assignee/profile names are case-sensitive. Do not visually uppercase
+   * lane headers, otherwise a valid `analyst` profile appears as `ANALYST`
+   * in the WebUI and users may copy the wrong casing back into edits. */
+  letter-spacing: 0.02em;
+  color: var(--color-muted-foreground);
+  padding: 0 0.1rem;
+}
+.mason-kanban-lane-name {
+  font-weight: 600;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.mason-kanban-lane-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Card ------------------------------------------------------------ */
+
+.mason-kanban-card {
+  cursor: grab;
+  transition: transform 100ms ease, box-shadow 100ms ease;
+}
+.mason-kanban-card:hover {
+  box-shadow: 0 1px 0 0 var(--color-ring) inset, 0 0 0 1px var(--color-ring) inset;
+}
+.mason-kanban-card:active {
+  cursor: grabbing;
+  transform: scale(0.995);
+}
+
+.mason-kanban-card-content {
+  padding: 0.5rem 0.6rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mason-kanban-card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.mason-kanban-card-id {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.65rem;
+  color: var(--color-muted-foreground);
+  letter-spacing: 0.03em;
+}
+
+.mason-kanban-card-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--color-foreground);
+  word-break: break-word;
+}
+
+.mason-kanban-card-meta {
+  font-size: 0.7rem;
+  color: var(--color-muted-foreground);
+  gap: 0.55rem;
+}
+
+.mason-kanban-priority {
+  font-size: 0.6rem !important;
+  padding: 0.05rem 0.3rem !important;
+  background: color-mix(in srgb, var(--color-ring) 18%, transparent);
+  color: var(--color-foreground);
+  border: 1px solid color-mix(in srgb, var(--color-ring) 40%, transparent);
+}
+
+.mason-kanban-tag {
+  font-size: 0.6rem !important;
+  padding: 0.05rem 0.3rem !important;
+}
+
+.mason-kanban-needs-assignee {
+  font-size: 0.6rem !important;
+  padding: 0.05rem 0.3rem !important;
+  background: color-mix(in srgb, var(--color-warning, #d4b348) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-warning, #d4b348) 45%, var(--color-border));
+  color: var(--color-foreground);
+}
+
+.mason-kanban-assignee {
+  font-weight: 500;
+  color: color-mix(in srgb, var(--color-foreground) 80%, var(--color-muted-foreground));
+}
+.mason-kanban-unassigned {
+  font-style: italic;
+}
+.mason-kanban-ago {
+  margin-left: auto;
+}
+
+/* ---- Create-task dialog ----------------------------------------------- */
+
+/* Wider than the base dialog so the workspace/parent selectors and the
+   labeled two-column rows breathe; still clamped to the viewport. */
+.mason-kanban-create-dialog {
+  width: 36rem;
+}
+
+/* ---- Drawer (task detail side panel) --------------------------------- */
+
+.mason-kanban-drawer-shade {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mason-kanban-drawer {
+  width: min(var(--mason-kanban-drawer-width, 640px), 92vw);
+  height: 100vh;
+  /* Dynamic viewport unit excludes the mobile browser's collapsing chrome
+     (URL/nav bars) so the drawer's bottom row stays reachable. Falls back to
+     100vh on browsers without dvh support. */
+  height: 100dvh;
+  max-height: 100dvh;
+  background: var(--color-card);
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 18px rgba(0, 0, 0, 0.35);
+  animation: mason-kanban-drawer-in 180ms ease-out;
+}
+
+@keyframes mason-kanban-drawer-in {
+  from { transform: translateX(100%); opacity: 0.3; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+.mason-kanban-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  /* Honor the top safe-area inset (notch) so the task id / close button are
+     not clipped on mobile. */
+  padding-top: max(0.6rem, env(safe-area-inset-top));
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+/* On mobile the dashboard shell renders a fixed top bar (min-h-14, hidden at
+   the lg breakpoint). The drawer is a body-level z-60 overlay starting at the
+   viewport top, so its header would sit behind that bar. Push the header down
+   by the bar height (3.5rem) plus the top safe-area inset. */
+@media (max-width: 1023px) {
+  .mason-kanban-drawer-head {
+    padding-top: calc(3.5rem + env(safe-area-inset-top));
+  }
+}
+
+.mason-kanban-drawer-close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-muted-foreground);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+.mason-kanban-drawer-close:hover { color: var(--color-foreground); }
+
+/* Attachment download trigger — styled as a link, rendered as a <button>
+   so the click handler can fetch with the session token (#35338). */
+.mason-kanban-attachment-link {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  color: var(--color-primary, #6ea8fe);
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.mason-kanban-attachment-link:hover { text-decoration: underline; }
+
+.mason-kanban-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem;
+  /* When no comment row is rendered (loading / error states), the scrolling
+     body is the bottom-most element — extend its bottom padding past the
+     mobile browser chrome so the last content stays readable. */
+  padding-bottom: max(0.9rem, calc(0.9rem + env(safe-area-inset-bottom)));
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mason-kanban-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.mason-kanban-drawer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+.mason-kanban-meta-row {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.mason-kanban-meta-label {
+  width: 92px;
+  color: var(--color-muted-foreground);
+}
+.mason-kanban-meta-value {
+  color: var(--color-foreground);
+  word-break: break-word;
+}
+
+.mason-kanban-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Specifier result banner — sits directly under the status action row. */
+.mason-kanban-msg-ok,
+.mason-kanban-msg-err {
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.375rem;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+.mason-kanban-msg-ok {
+  background: rgba(46, 160, 67, 0.12);
+  color: #2ea043;
+  border: 1px solid rgba(46, 160, 67, 0.35);
+}
+.mason-kanban-msg-err {
+  background: rgba(248, 81, 73, 0.12);
+  color: #f85149;
+  border: 1px solid rgba(248, 81, 73, 0.35);
+}
+
+/* ---- Home channel subscription toggles (per-platform, per-task) ----- */
+
+.mason-kanban-home-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.mason-kanban-home-sub {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+.mason-kanban-home-sub--on {
+  /* Subscribed toggle — use a strong ring-colored accent so the on/off
+   * distinction reads at a glance, not just from the ✓ prefix. Border +
+   * filled background + bolder weight keep the state obvious across
+   * themes (tested on default teal and NERV orange). */
+  border-color: var(--color-ring);
+  background: color-mix(in srgb, var(--color-ring) 32%, transparent);
+  color: var(--color-foreground);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ring) 40%, transparent);
+}
+
+.mason-kanban-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mason-kanban-section-head {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: var(--color-muted-foreground);
+}
+
+.mason-kanban-pre {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: color-mix(in srgb, var(--color-foreground) 4%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.25rem);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--color-foreground);
+}
+
+.mason-kanban-comment {
+  border-left: 2px solid color-mix(in srgb, var(--color-ring) 35%, transparent);
+  padding-left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.mason-kanban-comment-head {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+}
+.mason-kanban-comment-author {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+.mason-kanban-comment-ago {
+  color: var(--color-muted-foreground);
+}
+
+.mason-kanban-event {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--color-muted-foreground);
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.mason-kanban-event-kind {
+  color: var(--color-foreground);
+  min-width: 6rem;
+}
+.mason-kanban-event-payload {
+  color: var(--color-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
+}
+
+/* Comment footer = workflow hint + input row. The border-top lives on the
+   wrapper so the hint sits inside the same visual block as the input. */
+.mason-kanban-drawer-comment-foot {
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-card) 90%, transparent);
+}
+
+.mason-kanban-comment-hint {
+  padding: 0.45rem 0.75rem 0;
+  cursor: help;
+}
+
+.mason-kanban-drawer-comment-row {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  /* Keep the comment input clear of the mobile browser nav bar / home
+     indicator by extending the bottom padding with the safe-area inset. */
+  padding-bottom: max(0.55rem, calc(0.55rem + env(safe-area-inset-bottom)));
+}
+
+.mason-kanban-count {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+/* ---- Selection chrome ----------------------------------------------- */
+
+.mason-kanban-card--selected :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 2px var(--color-ring) inset,
+              0 0 0 1px var(--color-ring) inset;
+  background: color-mix(in srgb, var(--color-ring) 6%, var(--color-card));
+}
+
+/* Batch drag source styling — cards that are part of the current multi-drag.
+   The browser ghost image floats; we dim the original DOM nodes so the user
+   sees the whole set is in-flight. */
+.mason-kanban-card--dragging-source :where(.mason-kanban-card-content) {
+  opacity: 0.45;
+  filter: grayscale(0.6);
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+
+.mason-kanban-card-check {
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-ring);
+}
+
+/* ---- Bulk action bar ------------------------------------------------ */
+
+.mason-kanban-bulk {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: color-mix(in srgb, var(--color-ring) 10%, var(--color-card));
+  border: 1px solid color-mix(in srgb, var(--color-ring) 40%, var(--color-border));
+  border-radius: var(--radius-sm, 0.25rem);
+  flex-wrap: wrap;
+}
+.mason-kanban-bulk-count {
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding-right: 0.25rem;
+}
+
+.mason-kanban-bulk > button,
+.mason-kanban-bulk-reassign > button {
+  height: 1.7rem !important;
+  padding: 0 0.5rem !important;
+  font-size: 0.7rem !important;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+}
+.mason-kanban-bulk > button:hover:not(:disabled),
+.mason-kanban-bulk-reassign > button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-foreground) 8%, transparent);
+}
+.mason-kanban-bulk-reassign {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+/* ---- Dependency editor chips --------------------------------------- */
+
+.mason-kanban-deps-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+.mason-kanban-deps-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--color-muted-foreground);
+  min-width: 4rem;
+}
+.mason-kanban-deps-chips {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.mason-kanban-deps-empty {
+  font-size: 0.7rem;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+}
+.mason-kanban-dep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.35rem;
+  background: color-mix(in srgb, var(--color-foreground) 6%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.25rem);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  color: var(--color-foreground);
+}
+.mason-kanban-dep-chip-x {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-muted-foreground);
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+.mason-kanban-dep-chip-x:hover { color: var(--color-destructive, #d14a4a); }
+
+/* ---- Inline edit affordances --------------------------------------- */
+
+.mason-kanban-editable {
+  cursor: pointer;
+  border-bottom: 1px dotted color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+.mason-kanban-editable:hover {
+  color: var(--color-foreground);
+  border-bottom-color: var(--color-ring);
+}
+
+.mason-kanban-drawer-title-text {
+  cursor: pointer;
+}
+.mason-kanban-drawer-title-text:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--color-ring);
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+
+.mason-kanban-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.mason-kanban-section-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.mason-kanban-edit-link {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 0;
+}
+.mason-kanban-edit-link:hover { color: var(--color-ring); }
+
+.mason-kanban-textarea {
+  width: 100%;
+  min-height: 8rem;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.25rem);
+  padding: 0.5rem 0.6rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.mason-kanban-textarea:focus {
+  outline: none;
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-ring) 30%, transparent);
+}
+
+/* ---- Markdown rendering -------------------------------------------- */
+
+.mason-kanban-md {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--color-foreground);
+}
+.mason-kanban-md p  { margin: 0.25rem 0; }
+.mason-kanban-md h1,
+.mason-kanban-md h2,
+.mason-kanban-md h3,
+.mason-kanban-md h4 {
+  margin: 0.6rem 0 0.2rem;
+  line-height: 1.25;
+}
+.mason-kanban-md h1 { font-size: 1.05rem; }
+.mason-kanban-md h2 { font-size: 0.95rem; }
+.mason-kanban-md h3 { font-size: 0.88rem; }
+.mason-kanban-md h4 { font-size: 0.82rem; }
+.mason-kanban-md ul {
+  margin: 0.25rem 0 0.25rem 1.1rem;
+  padding: 0;
+}
+.mason-kanban-md li { margin: 0.1rem 0; }
+.mason-kanban-md a {
+  color: var(--color-ring);
+  text-decoration: underline;
+}
+.mason-kanban-md code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8rem;
+  padding: 0.05rem 0.3rem;
+  /* Background is set in the code/pre reset block at the top of this
+   * file with !important, so theme-level global code rules can't knock
+   * out this intentional pill. See #21086. */
+  border-radius: 3px;
+  color: inherit;
+}
+/* Fenced code block. Set a visible background even when --color-foreground
+ * is empty (color-mix falls through to transparent in that case), and force
+ * color: inherit so the text tracks the drawer foreground rather than the
+ * UA default on <code> elements — otherwise themes that don't set
+ * --color-foreground leave code text rendering near-black on dark themes
+ * (see issue #18576). */
+.mason-kanban pre.mason-kanban-md-code {
+  margin: 0.35rem 0;
+  padding: 0.5rem 0.6rem;
+  /* Higher specificity (``.mason-kanban pre.mason-kanban-md-code`` vs
+   * the reset's ``.mason-kanban pre``) so this intentional pill wins
+   * over our own ``<pre>`` reset. ``!important`` also needed so theme
+   * rules that drop their own ``code``/``pre`` fill don't knock it out
+   * either. #21086. */
+  background: color-mix(in srgb, currentColor 6%, transparent) !important;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 0.25rem);
+  overflow-x: auto;
+}
+.mason-kanban-md-code code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.8rem;
+  white-space: pre;
+  color: inherit;
+}
+.mason-kanban-md strong { font-weight: 600; }
+
+/* ---- Touch-drag proxy ---------------------------------------------- */
+
+.mason-kanban-touch-proxy {
+  pointer-events: none;
+  opacity: 0.85;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  transform: scale(1.02);
+  transition: none;
+}
+
+/* ---- Multi-drag ghost ----------------------------------------------- */
+
+.mason-kanban-drag-ghost {
+  position: fixed;
+  left: -9999px;
+  padding: 0.45rem 0.8rem;
+  background: var(--color-card);
+  border: 2px solid var(--color-ring);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0.95;
+}
+
+/* ---- Staleness tiers ------------------------------------------------ */
+
+.mason-kanban-card--stale-amber :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 1px #d4b34888 inset;
+}
+.mason-kanban-card--stale-amber:hover :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 2px #d4b348 inset;
+}
+.mason-kanban-card--stale-red :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 1px var(--color-destructive, #d14a4a) inset,
+              0 0 8px color-mix(in srgb, var(--color-destructive, #d14a4a) 30%, transparent);
+}
+.mason-kanban-card--stale-red:hover :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 2px var(--color-destructive, #d14a4a) inset,
+              0 0 10px color-mix(in srgb, var(--color-destructive, #d14a4a) 45%, transparent);
+}
+
+/* ---- Worker log pane ------------------------------------------------ */
+
+.mason-kanban-log {
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+
+/* ---- Run history (per-attempt log in the drawer) ------------------- */
+
+.mason-kanban-run {
+  border-left: 2px solid var(--color-border);
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.4rem;
+  background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
+  border-radius: var(--radius-sm, 0.25rem);
+}
+.mason-kanban-run--active  { border-left-color: #3fb97d; }
+.mason-kanban-run--completed { border-left-color: #4a8cd1; }
+.mason-kanban-run--ended { border-left-color: #6b7280; }  /* generic fallback when outcome is unset */
+.mason-kanban-run--blocked { border-left-color: var(--color-destructive, #d14a4a); }
+.mason-kanban-run--crashed,
+.mason-kanban-run--timed_out,
+.mason-kanban-run--gave_up,
+.mason-kanban-run--spawn_failed {
+  border-left-color: var(--color-destructive, #d14a4a);
+  background: color-mix(in srgb, var(--color-destructive, #d14a4a) 6%, transparent);
+}
+.mason-kanban-run--reclaimed { border-left-color: #d4b348; }
+
+.mason-kanban-run-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+}
+.mason-kanban-run-outcome {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-foreground);
+}
+.mason-kanban-run-profile {
+  color: var(--color-muted-foreground);
+}
+.mason-kanban-run-elapsed {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted-foreground);
+}
+.mason-kanban-run-ago {
+  margin-left: auto;
+  color: var(--color-muted-foreground);
+}
+.mason-kanban-run-summary {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.2rem 0 0;
+  color: var(--color-foreground);
+}
+.mason-kanban-run-error {
+  font-size: 0.7rem;
+  color: var(--color-destructive, #d14a4a);
+  padding: 0.15rem 0 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+/* Run metadata is a secondary detail panel. Render it as a clearly-labeled
+ * sub-block with a thin left rule, capped height, and muted treatment so
+ * a verbose JSON blob (e.g. changed_files + URLs from a writer task) does
+ * not visually swamp the parent run row or get mistaken for a crash dump.
+ * Uses a native <details>/<summary> pair so collapse is browser-handled
+ * (zero JS); large blobs default collapsed via the open=false attribute.
+ * See issue #19548. */
+.mason-kanban-run-meta-block {
+  margin-top: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  border-left: 2px solid var(--color-border);
+  background: transparent;
+}
+.mason-kanban-run-meta-block > summary.mason-kanban-run-meta-label {
+  cursor: pointer;
+  list-style: none;
+}
+.mason-kanban-run-meta-block > summary.mason-kanban-run-meta-label::-webkit-details-marker {
+  display: none;
+}
+.mason-kanban-run-meta-block > summary.mason-kanban-run-meta-label::before {
+  content: "▶ ";
+  display: inline-block;
+  font-size: 0.6rem;
+  margin-right: 0.25rem;
+  transition: transform 120ms ease;
+}
+.mason-kanban-run-meta-block[open] > summary.mason-kanban-run-meta-label::before {
+  transform: rotate(90deg);
+}
+.mason-kanban-run-meta-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-muted-foreground);
+  padding-bottom: 0.15rem;
+}
+.mason-kanban-run-meta {
+  display: block;
+  max-height: 8.5rem;
+  overflow: auto;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  padding: 0;
+  color: var(--color-muted-foreground);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  background: transparent;
+}
+
+/* -------------------------------------------------------------------------
+   Multi-project: board switcher + create-board dialog
+   ------------------------------------------------------------------------- */
+.mason-kanban-boardswitcher {
+  border: 1px solid var(--color-border, rgba(120, 120, 140, 0.25));
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--color-card-subtle, rgba(255, 255, 255, 0.02));
+}
+.mason-kanban-boardswitcher-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.mason-kanban-boardswitcher-compact {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0.25rem;
+  gap: 0.5rem;
+  align-items: center;
+}
+.mason-kanban-docs-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-muted-foreground, rgba(180, 180, 200, 0.8));
+  background: var(--color-card-subtle, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(120, 120, 140, 0.25));
+  text-decoration: none;
+  cursor: help;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.mason-kanban-docs-link:hover,
+.mason-kanban-docs-link:focus-visible {
+  color: var(--color-foreground, #e7e7ee);
+  background: var(--color-card, rgba(255, 255, 255, 0.08));
+  border-color: var(--color-border, rgba(160, 160, 190, 0.45));
+  outline: none;
+}
+.mason-kanban-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 16, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mason-kanban-dialog {
+  background: var(--color-card, #121421);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border, rgba(120, 120, 140, 0.25));
+  border-radius: 0.5rem;
+  padding: 1.1rem 1.2rem 1rem;
+  width: 28rem;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 3rem);
+  overflow: auto;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+.mason-kanban-dialog-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.mason-kanban-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Hallucination warnings: per-card badge, events callout, attention      */
+/* strip, recovery popover. Orange/red palette but muted so the board     */
+/* doesn't scream on every render.                                        */
+/* ---------------------------------------------------------------------- */
+.mason-kanban-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #ff9e3b;
+  margin-left: 0.25rem;
+  cursor: help;
+}
+
+/* Attention strip — collapsed state is a thin bar. */
+.mason-kanban-attention {
+  border: 1px solid rgba(255, 158, 59, 0.35);
+  background: rgba(255, 158, 59, 0.06);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.mason-kanban-attention-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+}
+.mason-kanban-attention-icon { color: #ff9e3b; font-size: 1rem; }
+.mason-kanban-attention-text { flex: 1; }
+.mason-kanban-attention-toggle,
+.mason-kanban-attention-dismiss,
+.mason-kanban-attention-row-btn {
+  background: transparent;
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  color: inherit;
+  cursor: pointer;
+}
+.mason-kanban-attention-toggle:hover,
+.mason-kanban-attention-dismiss:hover,
+.mason-kanban-attention-row-btn:hover {
+  background: rgba(255, 158, 59, 0.12);
+}
+.mason-kanban-attention-list {
+  border-top: 1px solid rgba(255, 158, 59, 0.2);
+  padding: 0.25rem 0;
+}
+.mason-kanban-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8125rem;
+}
+.mason-kanban-attention-row:hover {
+  background: rgba(255, 158, 59, 0.08);
+}
+.mason-kanban-attention-row-id {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #888);
+  min-width: 7rem;
+}
+.mason-kanban-attention-row-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mason-kanban-attention-row-meta {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #888);
+}
+
+/* Events tab — callout style for hallucination events. */
+.mason-kanban-event--hallucination {
+  border-left: 3px solid #ff6b6b;
+  background: rgba(255, 107, 107, 0.08);
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.35rem;
+  margin: 0.25rem 0;
+}
+.mason-kanban-event-header,
+.mason-kanban-event-header-plain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mason-kanban-event-warning-icon { color: #ff6b6b; font-size: 1rem; }
+.mason-kanban-event-warning-label {
+  color: #ff6b6b;
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+.mason-kanban-event-phantom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+  padding-left: 1.35rem;
+}
+.mason-kanban-event-phantom-label {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #999);
+}
+.mason-kanban-event-phantom-chip {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 0.3rem;
+}
+
+/* Recovery section header — amber accent when the task has warnings. */
+.mason-kanban-section-head-warning { color: #ff9e3b; }
+.mason-kanban-section-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.mason-kanban-section-toggle {
+  background: transparent;
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Recovery popover body. */
+.mason-kanban-recovery {
+  border: 1px solid rgba(120, 120, 140, 0.25);
+  background: rgba(255, 158, 59, 0.04);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.mason-kanban-recovery-title {
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+.mason-kanban-recovery-hint {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #888);
+  line-height: 1.35;
+}
+.mason-kanban-recovery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.mason-kanban-recovery-label {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #888);
+}
+.mason-kanban-recovery-input,
+.mason-kanban-recovery-select {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.8125rem;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 0.3rem;
+  color: inherit;
+  outline: none;
+}
+.mason-kanban-recovery-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.mason-kanban-recovery-action-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-width: 8rem;
+}
+.mason-kanban-recovery-action-desc {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground, #888);
+}
+.mason-kanban-recovery-btn {
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  background: rgba(255, 158, 59, 0.15);
+  border: 1px solid rgba(255, 158, 59, 0.4);
+  border-radius: 0.3rem;
+  color: inherit;
+  cursor: pointer;
+}
+.mason-kanban-recovery-btn:hover:not(:disabled) {
+  background: rgba(255, 158, 59, 0.25);
+}
+.mason-kanban-recovery-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mason-kanban-recovery-reassign-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.mason-kanban-recovery-checkbox {
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.mason-kanban-recovery-cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.mason-kanban-recovery-cmd {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 0.3rem;
+  flex: 1;
+  min-width: 10rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.mason-kanban-recovery-msg {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.3rem;
+}
+.mason-kanban-recovery-msg--ok {
+  background: rgba(120, 200, 120, 0.12);
+  color: #6bc46b;
+  border: 1px solid rgba(120, 200, 120, 0.3);
+}
+.mason-kanban-recovery-msg--err {
+  background: rgba(255, 107, 107, 0.12);
+  color: #ff8b8b;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Diagnostics — generic, severity-coloured distress signals on tasks.    */
+/* Three rungs: warning (amber), error (orange), critical (red).          */
+/* ---------------------------------------------------------------------- */
+
+/* Severity token variables so every diagnostic-coloured surface uses the */
+/* same palette. */
+.mason-kanban-diag,
+.mason-kanban-attention,
+.mason-kanban-warning-badge,
+.mason-kanban-attention-row {
+  --mason-diag-warning: #ff9e3b;
+  --mason-diag-error:   #ff6b3d;
+  --mason-diag-critical: #ff4d4d;
+}
+
+/* Warning-badge severity variants (overrides the base colour). */
+.mason-kanban-warning-badge--warning { color: var(--mason-diag-warning); }
+.mason-kanban-warning-badge--error   { color: var(--mason-diag-error); font-weight: 700; }
+.mason-kanban-warning-badge--critical { color: var(--mason-diag-critical); font-weight: 700; }
+
+/* Attention-strip severity variants. */
+.mason-kanban-attention--warning {
+  border-color: rgba(255, 158, 59, 0.35);
+  background: rgba(255, 158, 59, 0.06);
+}
+.mason-kanban-attention--error {
+  border-color: rgba(255, 107, 61, 0.45);
+  background: rgba(255, 107, 61, 0.08);
+}
+.mason-kanban-attention--critical {
+  border-color: rgba(255, 77, 77, 0.55);
+  background: rgba(255, 77, 77, 0.10);
+}
+.mason-kanban-attention--error .mason-kanban-attention-icon { color: var(--mason-diag-error); }
+.mason-kanban-attention--critical .mason-kanban-attention-icon { color: var(--mason-diag-critical); }
+
+/* Per-row severity marker in the expanded attention list. */
+.mason-kanban-attention-row-sev {
+  display: inline-block;
+  min-width: 1.5rem;
+  font-weight: 600;
+}
+.mason-kanban-attention-row--warning .mason-kanban-attention-row-sev { color: var(--mason-diag-warning); }
+.mason-kanban-attention-row--error    .mason-kanban-attention-row-sev { color: var(--mason-diag-error); font-weight: 700; }
+.mason-kanban-attention-row--critical .mason-kanban-attention-row-sev { color: var(--mason-diag-critical); font-weight: 700; }
+
+/* Individual diagnostic card inside the drawer's Diagnostics section. */
+.mason-kanban-diag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.mason-kanban-diag {
+  border-left: 3px solid var(--mason-diag-warning);
+  background: rgba(255, 158, 59, 0.05);
+  border-radius: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.mason-kanban-diag--error {
+  border-left-color: var(--mason-diag-error);
+  background: rgba(255, 107, 61, 0.06);
+}
+.mason-kanban-diag--critical {
+  border-left-color: var(--mason-diag-critical);
+  background: rgba(255, 77, 77, 0.07);
+}
+.mason-kanban-diag-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.mason-kanban-diag-sev {
+  font-weight: 700;
+  min-width: 1.5rem;
+}
+.mason-kanban-diag--warning .mason-kanban-diag-sev { color: var(--mason-diag-warning); }
+.mason-kanban-diag--error    .mason-kanban-diag-sev { color: var(--mason-diag-error); }
+.mason-kanban-diag--critical .mason-kanban-diag-sev { color: var(--mason-diag-critical); }
+.mason-kanban-diag-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.mason-kanban-diag-detail {
+  font-size: 0.8125rem;
+  color: var(--color-foreground, #ccc);
+  line-height: 1.4;
+}
+.mason-kanban-diag-data {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+}
+.mason-kanban-diag-data-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.mason-kanban-diag-data-key {
+  color: var(--color-muted-foreground, #888);
+  font-weight: 500;
+}
+.mason-kanban-diag-data-val {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.mason-kanban-diag-reassign-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+}
+.mason-kanban-diag-reassign-label {
+  color: var(--color-muted-foreground, #888);
+}
+.mason-kanban-diag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+.mason-kanban-diag-action-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(120, 120, 140, 0.3);
+  border-radius: 0.3rem;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+.mason-kanban-diag-action-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.3);
+}
+.mason-kanban-diag-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mason-kanban-diag-action-btn--suggested {
+  background: rgba(255, 158, 59, 0.15);
+  border-color: rgba(255, 158, 59, 0.4);
+  font-weight: 600;
+}
+.mason-kanban-diag-action-btn--suggested:hover:not(:disabled) {
+  background: rgba(255, 158, 59, 0.25);
+}
+.mason-kanban-diag-action-btn--unknown {
+  opacity: 0.6;
+  cursor: default;
+}
+.mason-kanban-diag-msg {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.3rem;
+}
+.mason-kanban-diag-msg--ok {
+  background: rgba(120, 200, 120, 0.12);
+  color: #6bc46b;
+  border: 1px solid rgba(120, 200, 120, 0.3);
+}
+.mason-kanban-diag-msg--err {
+  background: rgba(255, 107, 61, 0.12);
+  color: #ff8b6b;
+  border: 1px solid rgba(255, 107, 61, 0.3);
+}
+/* ---- Partial failure highlight --------------------------------------- */
+.mason-kanban-card--failed :where(.mason-kanban-card-content) {
+  box-shadow: 0 0 0 2px var(--color-destructive, #d14a4a) inset,
+              0 0 8px color-mix(in srgb, var(--color-destructive, #d14a4a) 30%, transparent);
+}
+
+/* ---- Larger checkbox hit target -------------------------------------- */
+.mason-kanban-card-check-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: -0.3rem;
+  cursor: pointer;
+}
+.mason-kanban-card-check {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--color-ring);
+}
+
+/* ---- Column select-all checkbox -------------------------------------- */
+.mason-kanban-col-check {
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: 0 0.15rem 0 0;
+  cursor: pointer;
+  accent-color: var(--color-ring);
+}
+
+/* ---- Bulk action bar extras ------------------------------------------ */
+.mason-kanban-bulk-priority {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+.mason-kanban-bulk-reclaim-first {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* ---- Trash drop zone ------------------------------------------------- */
+
+.mason-kanban-trash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0.5rem;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--color-card) 85%, transparent);
+  color: var(--color-muted-foreground);
+  font-size: 0.75rem;
+  min-height: 80px;
+  opacity: 0.5;
+  transition: opacity 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mason-kanban-trash--active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mason-kanban-trash--drop {
+  border-color: var(--color-destructive, #d14a4a);
+  background: color-mix(in srgb, var(--color-destructive, #d14a4a) 8%, var(--color-card));
+  color: var(--color-destructive, #d14a4a);
+}
+
+.mason-kanban-trash-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.mason-kanban-trash-label {
+  font-weight: 500;
+}

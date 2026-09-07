@@ -1,0 +1,17 @@
+{
+ "type": "function",
+ "function": {
+  "name": "read_state",
+  "description": "Read the session's tiny state.md working memory (what the main model remembers).",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "session_id": {
+     "type": "string",
+     "description": "Session id."
+    }
+   },
+   "required": []
+  }
+ }
+}

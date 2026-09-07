@@ -1,0 +1,56 @@
+{
+ "type": "function",
+ "function": {
+  "name": "delegate_task",
+  "description": "Spawn subagents in isolated contexts; each gets its own conversation, terminal session, and toolset, and only its final summary returns to you. Pass every task in `tasks` — one entry spawns one subagent, several run in parallel (limit in the tasks description).\n\nRuns in the background: dispatch returns immediately with live transcript paths, and the completed result (one consolidated message, results in task order) re-enters the conversation on its own. Do NOT wait or poll; continue other work. While children run, `action` (list/steer/stop) controls them live — steer when a transcript shows a child drifting.\n\nUSE FOR: reasoning-heavy subtasks, work that would flood your context with intermediate data, or independent parallel workstreams.\nDO NOT USE FOR (use these instead):\n- Mechanical multi-step work with no reasoning needed -> execute_code\n- A single tool call -> call the tool directly\n- Tasks needing user interaction -> subagents cannot ask questions\n- Durable work that must survive this session -> cronjob or terminal(background=True, notify=True); /stop, /new, or process exit discards running subagents.\n\nRULES:\n- Children know nothing of this conversation: pass everything needed via 'context', including any required output language, tone, or style (e.g. \"respond in Chinese\").\n- Child summaries are SELF-REPORTS, not verified facts: a child claiming \"uploaded successfully\" or \"file written\" may be wrong. For external side effects (uploads, remote writes, publishing), require a verifiable handle (URL, ID, absolute path) and verify it yourself before telling the user the operation succeeded.\n- Children cannot call delegate_task, clarify, memory, or cronjob.\n- Children inherit the parent model unless pinned via delegation.provider / delegation.model in config.yaml.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "tasks": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "properties": {
+       "goal": {
+        "type": "string",
+        "description": "What this subagent should accomplish. Be specific and self-contained — it knows nothing about your conversation history."
+       },
+       "context": {
+        "type": "string",
+        "description": "Background THIS child needs: file paths, error messages, constraints. Each child sees only its own context — repeat shared background in every task that needs it."
+       },
+       "output_schema": {
+        "type": "object",
+        "description": "Optional JSON Schema this child's final answer must validate against (told to the child up front; parent validates with one bounded correction retry; result gains schema_valid, plus schema_errors on failure). Keep it forgiving — require only fields you will read."
+       }
+      },
+      "required": [
+       "goal"
+      ]
+     },
+     "description": "The task(s), up to 10 in parallel for this user (set via delegation.max_concurrent_children). Each entry spawns one subagent with isolated context and terminal session; a single task is a one-entry array. Required when spawning."
+    },
+    "action": {
+     "type": "string",
+     "enum": [
+      "spawn",
+      "list",
+      "steer",
+      "stop"
+     ],
+     "description": "Default 'spawn'. Live control of running children: 'list' = ids/goals/status/transcripts; 'steer' = queue course-correction text into one child (subagent_id + message) without stopping it; 'stop' = end one child early (subagent_id; partial result still returns). Control actions return immediately; goal/tasks are ignored unless spawning."
+    },
+    "subagent_id": {
+     "type": "string",
+     "description": "Target for action='steer'/'stop' (ids from the spawn response or action='list')."
+    },
+    "message": {
+     "type": "string",
+     "description": "For action='steer': the course correction, appended to the child's next tool result mid-run. Be directive and specific."
+    }
+   },
+   "required": []
+  }
+ }
+}

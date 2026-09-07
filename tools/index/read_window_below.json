@@ -1,0 +1,11 @@
+{
+ "type": "function",
+ "function": {
+  "name": "read_window_below",
+  "description": "Identify the app window directly behind the Mason desktop window (what the user is working in). JSON: {window: {app, title, bounds, id}, frontmost, platform}. title may be empty when the OS withholds it (noted in `note`); where windows cannot be enumerated at all, {error, platform} says what would fix it — relay that instead of retrying. Metadata only; never captures pixels.",
+  "parameters": {
+   "type": "object",
+   "properties": {}
+  }
+ }
+}

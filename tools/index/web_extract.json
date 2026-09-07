@@ -1,0 +1,28 @@
+{
+ "type": "function",
+ "function": {
+  "name": "web_extract",
+  "description": "Extract content from web page URLs. Returns clean page content in markdown/text (no LLM summarization — fast). Also works with PDF URLs (arxiv papers, documents) — pass the PDF link directly. Pages within the char budget (default 15000) return whole; larger pages return a head+tail window with a footer telling you the full text's saved file path and the read_file call to page through the omitted middle. Inline images appear as [IMAGE: alt] placeholders; real image URLs are kept as links. If a URL fails or times out, use the browser tool instead.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "urls": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "description": "List of URLs to extract content from (max 5 URLs per call)",
+     "maxItems": 5
+    },
+    "char_limit": {
+     "type": "integer",
+     "description": "Optional per-page character budget sent back (default 15000). Pages larger than this are head+tail truncated with the full text stored to disk. Raise it when you need more of a long page inline.",
+     "minimum": 2000
+    }
+   },
+   "required": [
+    "urls"
+   ]
+  }
+ }
+}

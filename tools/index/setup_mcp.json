@@ -1,0 +1,32 @@
+{
+ "type": "function",
+ "function": {
+  "name": "setup_mcp",
+  "description": "Propose an MCP server as an inline consent card (install a catalog entry, re-enable a disabled server, or run OAuth); blocks until the user acts. Use when they ask to add an MCP or a task clearly needs a missing one. Never hand-edit mcp_servers config for them — always use this tool. Never re-ask after a decline — on declined/unanswered, continue without it. Catalog names: `mason mcp catalog` in the terminal.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "server": {
+     "type": "string",
+     "description": "Catalog name (install) or mcp_servers config name (enable/authorize)."
+    },
+    "action": {
+     "type": "string",
+     "enum": [
+      "install",
+      "enable",
+      "authorize"
+     ],
+     "description": "Defaults to install."
+    },
+    "reason": {
+     "type": "string",
+     "description": "One sentence on the card: why this helps right now."
+    }
+   },
+   "required": [
+    "server"
+   ]
+  }
+ }
+}

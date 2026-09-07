@@ -1,0 +1,11 @@
+avg_evo:
+  enabled: true
+  max_tokens: 256
+  temperature: 0.2
+  timeout_ms: 800
+nightly:
+  hour: 2  # 02:00 local
+  minute: 0
+  lightweight_model: "local-1b"  # llama.cpp 1B
+  heavyweight_model: "main"      # uses provider.main (opencode proxy)
+  queue_max: 50

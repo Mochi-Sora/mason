@@ -1,0 +1,46 @@
+.DS_Store
+/venv/
+/venv.old/
+/venv.stale.runtime-*/
+/bin/
+/.mason-runtime/
+/_pycache/
+*.pyc*
+__pycache__/
+act/
+.act-sandbox-agent.*
+.venv/
+.venv
+.vscode/
+.env
+.op.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.mason-docker/
+.notebooklm-home/
+.notebooklm-cli-venv/
+.notebooklm-playwright/
+.pip-cache/
+.uv-cache/
+compose.mason.local.yml
+export*
+# Custom memory runtime
+/short_term_memories/
+/long_term_memories/
+/custom_memory/llm/models/*.gguf
+
+# Mason: never commit dependency trees or bytecode
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Mason runtime artifacts (sessions, nightly output, queues)
+/sessions/
+/custom_evolution/nightly/
+/custom_evolution/queue/
+/custom_evolution/patches/

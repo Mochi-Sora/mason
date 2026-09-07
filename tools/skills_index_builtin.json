@@ -1,0 +1,1157 @@
+{
+ "skills": [
+  {
+   "name": "apple-notes",
+   "description": "Manage Apple Notes via memo CLI: create, search, edit.",
+   "tags": [
+    "Notes",
+    "Apple",
+    "macOS",
+    "note-taking"
+   ],
+   "identifier": "builtin/apple-notes",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/apple/apple-notes",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "apple-reminders",
+   "description": "Apple Reminders via remindctl: add, list, complete.",
+   "tags": [
+    "Reminders",
+    "tasks",
+    "todo",
+    "macOS",
+    "Apple"
+   ],
+   "identifier": "builtin/apple-reminders",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/apple/apple-reminders",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "findmy",
+   "description": "Track Apple devices/AirTags via FindMy.app on macOS.",
+   "tags": [
+    "FindMy",
+    "AirTag",
+    "location",
+    "tracking",
+    "macOS",
+    "Apple"
+   ],
+   "identifier": "builtin/findmy",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/apple/findmy",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "imessage",
+   "description": "Send and receive iMessages/SMS via the imsg CLI on macOS.",
+   "tags": [
+    "iMessage",
+    "SMS",
+    "messaging",
+    "macOS",
+    "Apple"
+   ],
+   "identifier": "builtin/imessage",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/apple/imessage",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "claude-code",
+   "description": "Delegate coding to Claude Code CLI (features, PRs).",
+   "tags": [
+    "Coding-Agent",
+    "Claude",
+    "Anthropic",
+    "Code-Review",
+    "Refactoring",
+    "PTY",
+    "Automation"
+   ],
+   "identifier": "builtin/claude-code",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/autonomous-ai-agents/claude-code",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "codex",
+   "description": "Delegate coding to OpenAI Codex CLI (features, PRs).",
+   "tags": [
+    "Coding-Agent",
+    "Codex",
+    "OpenAI",
+    "Code-Review",
+    "Refactoring"
+   ],
+   "identifier": "builtin/codex",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/autonomous-ai-agents/codex",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "computer-use",
+   "description": "Drive the desktop background-first; escalate on signal.",
+   "tags": [
+    "computer-use",
+    "desktop",
+    "automation",
+    "gui",
+    "cross-platform"
+   ],
+   "identifier": "builtin/computer-use",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/autonomous-ai-agents/computer-use",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "mason-agent",
+   "description": "Use, configure, theme, extend, and orchestrate Mason Agent.",
+   "tags": [
+    "mason",
+    "setup",
+    "configuration",
+    "multi-agent",
+    "spawning",
+    "cli",
+    "gateway",
+    "bots",
+    "bot-mode",
+    "features",
+    "themes",
+    "skins",
+    "desktop-plugins",
+    "tui-widgets",
+    "petdex",
+    "development"
+   ],
+   "identifier": "builtin/mason-agent",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/autonomous-ai-agents/mason-agent",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "opencode",
+   "description": "Delegate coding to OpenCode CLI (features, PR review).",
+   "tags": [
+    "Coding-Agent",
+    "OpenCode",
+    "Autonomous",
+    "Refactoring",
+    "Code-Review"
+   ],
+   "identifier": "builtin/opencode",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/autonomous-ai-agents/opencode",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "architecture-diagram",
+   "description": "Dark-themed SVG architecture/cloud/infra diagrams as HTML.",
+   "tags": [
+    "architecture",
+    "diagrams",
+    "SVG",
+    "HTML",
+    "visualization",
+    "infrastructure",
+    "cloud"
+   ],
+   "identifier": "builtin/architecture-diagram",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/architecture-diagram",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "ascii-video",
+   "description": "ASCII video: convert video/audio to colored ASCII MP4/GIF.",
+   "tags": [
+    "ASCII",
+    "Video",
+    "FFmpeg",
+    "Terminal-Art"
+   ],
+   "identifier": "builtin/ascii-video",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/ascii-video",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "baoyu-infographic",
+   "description": "Infographics: 21 layouts x 21 styles (信息图, 可视化).",
+   "tags": [
+    "infographic",
+    "visual-summary",
+    "creative",
+    "image-generation"
+   ],
+   "identifier": "builtin/baoyu-infographic",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/baoyu-infographic",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "claude-design",
+   "description": "Design one-off HTML artifacts (landing, deck, prototype).",
+   "tags": [
+    "design",
+    "html",
+    "prototype",
+    "ux",
+    "ui",
+    "creative",
+    "artifact",
+    "deck",
+    "motion",
+    "design-system"
+   ],
+   "identifier": "builtin/claude-design",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/claude-design",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "design-md",
+   "description": "Author/validate/export Google's DESIGN.md token spec files.",
+   "tags": [
+    "design",
+    "design-system",
+    "tokens",
+    "ui",
+    "accessibility",
+    "wcag",
+    "tailwind",
+    "dtcg",
+    "google"
+   ],
+   "identifier": "builtin/design-md",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/design-md",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "humanizer",
+   "description": "Humanize text: strip AI-isms and add real voice.",
+   "tags": [
+    "writing",
+    "editing",
+    "humanize",
+    "anti-ai-slop",
+    "voice",
+    "prose",
+    "text"
+   ],
+   "identifier": "builtin/humanizer",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/humanizer",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "manim-video",
+   "description": "Manim CE animations: 3Blue1Brown math/algo videos.",
+   "tags": [
+    "Manim",
+    "Animation",
+    "Math",
+    "Video"
+   ],
+   "identifier": "builtin/manim-video",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/manim-video",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "p5js",
+   "description": "p5.js sketches: gen art, shaders, interactive, 3D.",
+   "tags": [
+    "creative-coding",
+    "generative-art",
+    "p5js",
+    "canvas",
+    "interactive",
+    "visualization",
+    "webgl",
+    "shaders",
+    "animation"
+   ],
+   "identifier": "builtin/p5js",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/p5js",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "popular-web-designs",
+   "description": "54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.",
+   "tags": [
+    "design",
+    "css",
+    "html",
+    "ui",
+    "web-development",
+    "design-systems",
+    "templates"
+   ],
+   "identifier": "builtin/popular-web-designs",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/popular-web-designs",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "songwriting-and-ai-music",
+   "description": "Songwriting craft and Suno AI music prompts.",
+   "tags": [
+    "songwriting",
+    "music",
+    "suno",
+    "parody",
+    "lyrics",
+    "creative"
+   ],
+   "identifier": "builtin/songwriting-and-ai-music",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/creative/songwriting-and-ai-music",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "sdlc-review",
+   "description": "Review Kanban handoffs and route verified outcomes.",
+   "tags": [
+    "kanban",
+    "review",
+    "quality",
+    "verification"
+   ],
+   "identifier": "builtin/sdlc-review",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/devops/sdlc-review",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "email-inbox-triage",
+   "description": "Triage an inbox: prioritize threads, draft replies safely.",
+   "tags": [
+    "Email",
+    "Inbox",
+    "Triage",
+    "Replies",
+    "Productivity"
+   ],
+   "identifier": "builtin/email-inbox-triage",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/email/email-inbox-triage",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "himalaya",
+   "description": "Himalaya CLI: IMAP/SMTP email from terminal.",
+   "tags": [
+    "Email",
+    "IMAP",
+    "SMTP",
+    "CLI",
+    "Communication"
+   ],
+   "identifier": "builtin/himalaya",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/email/himalaya",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "gif-search",
+   "description": "Search/download GIFs from Tenor via curl + jq.",
+   "tags": [
+    "GIF",
+    "Media",
+    "Search",
+    "Tenor",
+    "API"
+   ],
+   "identifier": "builtin/gif-search",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/media/gif-search",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "songsee",
+   "description": "Audio spectrograms/features (mel, chroma, MFCC) via CLI.",
+   "tags": [
+    "Audio",
+    "Visualization",
+    "Spectrogram",
+    "Music",
+    "Analysis"
+   ],
+   "identifier": "builtin/songsee",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/media/songsee",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "youtube-content",
+   "description": "YouTube transcripts to summaries, threads, blogs.",
+   "tags": [
+    "YouTube",
+    "Video",
+    "Transcripts",
+    "Media"
+   ],
+   "identifier": "builtin/youtube-content",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/media/youtube-content",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "obsidian",
+   "description": "Read, search, create, and edit notes in the Obsidian vault.",
+   "tags": [
+    "Obsidian",
+    "Notes",
+    "Markdown",
+    "Vault"
+   ],
+   "identifier": "builtin/obsidian",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/note-taking/obsidian",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "airtable",
+   "description": "Airtable REST API via curl. Records CRUD, filters, upserts.",
+   "tags": [
+    "Airtable",
+    "Productivity",
+    "Database",
+    "API"
+   ],
+   "identifier": "builtin/airtable",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/airtable",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "box",
+   "description": "Box manages cloud files, sharing, search, and metadata.",
+   "tags": [
+    "Box",
+    "Productivity",
+    "Cloud Storage",
+    "Collaboration",
+    "Metadata",
+    "Content Extraction",
+    "CLI",
+    "SDK"
+   ],
+   "identifier": "builtin/box",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/box",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "document-to-action-items",
+   "description": "Extract cited obligations, deadlines, tasks from documents.",
+   "tags": [
+    "Documents",
+    "OCR",
+    "Action-Items",
+    "Deadlines",
+    "Extraction"
+   ],
+   "identifier": "builtin/document-to-action-items",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/document-to-action-items",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "docx",
+   "description": "Create, read, edit, template, and review Word .docx files.",
+   "tags": [
+    "word",
+    "docx",
+    "documents",
+    "office",
+    "templates",
+    "revisions",
+    "comments"
+   ],
+   "identifier": "builtin/docx",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/docx",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "google-workspace",
+   "description": "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python.",
+   "tags": [
+    "Google",
+    "Gmail",
+    "Calendar",
+    "Drive",
+    "Sheets",
+    "Docs",
+    "Contacts",
+    "Email",
+    "OAuth"
+   ],
+   "identifier": "builtin/google-workspace",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/google-workspace",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "maps",
+   "description": "Geocode, POIs, routes, timezones via OpenStreetMap/OSRM.",
+   "tags": [
+    "maps",
+    "geocoding",
+    "places",
+    "routing",
+    "distance",
+    "directions",
+    "nearby",
+    "location",
+    "openstreetmap",
+    "nominatim",
+    "overpass",
+    "osrm"
+   ],
+   "identifier": "builtin/maps",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/maps",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "meeting-action-items",
+   "description": "Turn meeting notes into cited decisions, owners, tickets.",
+   "tags": [
+    "Meetings",
+    "Action-Items",
+    "Follow-Up",
+    "Productivity"
+   ],
+   "identifier": "builtin/meeting-action-items",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/meeting-action-items",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "notion",
+   "description": "Notion API + ntn CLI: pages, databases, markdown, Workers.",
+   "tags": [
+    "Notion",
+    "Productivity",
+    "Notes",
+    "Database",
+    "API",
+    "CLI",
+    "Workers"
+   ],
+   "identifier": "builtin/notion",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/notion",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "pdf",
+   "description": "PDF files: create, read, merge, fill, OCR, edit text.",
+   "tags": [
+    "pdf",
+    "documents",
+    "forms",
+    "ocr",
+    "text-extraction",
+    "reportlab",
+    "pypdf",
+    "pdfplumber",
+    "pymupdf",
+    "marker"
+   ],
+   "identifier": "builtin/pdf",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/pdf",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "powerpoint",
+   "description": "Create, read, edit .pptx decks with python-pptx.",
+   "tags": [
+    "pptx",
+    "powerpoint",
+    "presentations",
+    "slides",
+    "office",
+    "python-pptx"
+   ],
+   "identifier": "builtin/powerpoint",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/powerpoint",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "product-price-monitor",
+   "description": "Watch product, flight, or listing prices; alert on target.",
+   "tags": [
+    "Prices",
+    "Availability",
+    "Shopping",
+    "Travel",
+    "Alerts"
+   ],
+   "identifier": "builtin/product-price-monitor",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/product-price-monitor",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "teams-meeting-pipeline",
+   "description": "Teams meeting summaries, job replay, Graph subscriptions.",
+   "tags": [
+    "Teams",
+    "Microsoft Graph",
+    "Meetings",
+    "Productivity",
+    "Operations"
+   ],
+   "identifier": "builtin/teams-meeting-pipeline",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/teams-meeting-pipeline",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "weekly-review-planning",
+   "description": "Weekly reset: commitments, stalled work, next-week plan.",
+   "tags": [
+    "Weekly-Review",
+    "Planning",
+    "Tasks",
+    "Calendar",
+    "Productivity"
+   ],
+   "identifier": "builtin/weekly-review-planning",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/weekly-review-planning",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "xlsx",
+   "description": "Create, read, edit Excel .xlsx workbooks and CSVs.",
+   "tags": [
+    "excel",
+    "spreadsheet",
+    "xlsx",
+    "csv",
+    "openpyxl",
+    "productivity"
+   ],
+   "identifier": "builtin/xlsx",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/productivity/xlsx",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "arxiv",
+   "description": "Search arXiv papers by keyword, author, category, or ID.",
+   "tags": [
+    "Research",
+    "Arxiv",
+    "Papers",
+    "Academic",
+    "Science",
+    "API"
+   ],
+   "identifier": "builtin/arxiv",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/research/arxiv",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "competitor-news-monitor",
+   "description": "Watch named companies for material news; cited digests.",
+   "tags": [
+    "Competitors",
+    "News",
+    "Market-Research",
+    "Monitoring"
+   ],
+   "identifier": "builtin/competitor-news-monitor",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/research/competitor-news-monitor",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "grounded-citations",
+   "description": "Ground answers and documents in cited, verifiable sources.",
+   "tags": [
+    "Research",
+    "Citations",
+    "Grounding",
+    "Sources",
+    "Web",
+    "Reports"
+   ],
+   "identifier": "builtin/grounded-citations",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/research/grounded-citations",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "llm-wiki",
+   "description": "Karpathy's LLM Wiki: build/query interlinked markdown KB.",
+   "tags": [
+    "wiki",
+    "knowledge-base",
+    "research",
+    "notes",
+    "markdown",
+    "rag-alternative"
+   ],
+   "identifier": "builtin/llm-wiki",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/research/llm-wiki",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "rss-feeds",
+   "description": "Read RSS, Atom, JSON feeds; discover feeds behind a page.",
+   "tags": [
+    "RSS",
+    "Atom",
+    "Feeds",
+    "Monitoring",
+    "Research",
+    "Blogs",
+    "Releases"
+   ],
+   "identifier": "builtin/rss-feeds",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/research/rss-feeds",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "reddit-reading",
+   "description": "Read Reddit: subreddits, search, threads, users. No browser.",
+   "tags": [
+    "Reddit",
+    "Social Media",
+    "Research",
+    "Discussions",
+    "Community"
+   ],
+   "identifier": "builtin/reddit-reading",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/social-media/reddit-reading",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "xurl",
+   "description": "X/Twitter via xurl CLI: raw post search, posting, DM, media.",
+   "tags": [
+    "twitter",
+    "x",
+    "social-media",
+    "xurl",
+    "official-api"
+   ],
+   "identifier": "builtin/xurl",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/social-media/xurl",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "codebase-inspection",
+   "description": "Inspect codebases w/ pygount: LOC, languages, ratios.",
+   "tags": [
+    "LOC",
+    "Code Analysis",
+    "pygount",
+    "Codebase",
+    "Metrics",
+    "Repository"
+   ],
+   "identifier": "builtin/codebase-inspection",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/codebase-inspection",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "dogfood",
+   "description": "Exploratory QA of web apps: find bugs, evidence, reports.",
+   "tags": [
+    "qa",
+    "testing",
+    "browser",
+    "web",
+    "dogfood"
+   ],
+   "identifier": "builtin/dogfood",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/dogfood",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "github",
+   "description": "GitHub via gh CLI: PRs, issues, reviews, repos, auth.",
+   "tags": [
+    "github",
+    "gh",
+    "git",
+    "pull-requests",
+    "issues",
+    "code-review",
+    "repos",
+    "auth",
+    "ci"
+   ],
+   "identifier": "builtin/github",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/github",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "inspecting-mason-desktop-dom",
+   "description": "Read the live Mason desktop DOM/CSS over CDP.",
+   "tags": [
+    "desktop",
+    "electron",
+    "cdp",
+    "dom",
+    "ui-verification",
+    "self-inspection"
+   ],
+   "identifier": "builtin/inspecting-mason-desktop-dom",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/inspecting-mason-desktop-dom",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "mason-agent-skill-authoring",
+   "description": "Author in-repo SKILL.md files: frontmatter and structure.",
+   "tags": [
+    "skills",
+    "authoring",
+    "mason-agent",
+    "conventions",
+    "skill-md"
+   ],
+   "identifier": "builtin/mason-agent-skill-authoring",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/mason-agent-skill-authoring",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "node-inspect-debugger",
+   "description": "Debug Node.js via --inspect + Chrome DevTools Protocol CLI.",
+   "tags": [
+    "debugging",
+    "nodejs",
+    "node-inspect",
+    "cdp",
+    "breakpoints",
+    "ui-tui"
+   ],
+   "identifier": "builtin/node-inspect-debugger",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/node-inspect-debugger",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "python-debugpy",
+   "description": "Debug Python: pdb REPL + debugpy remote (DAP).",
+   "tags": [
+    "debugging",
+    "python",
+    "pdb",
+    "debugpy",
+    "breakpoints",
+    "dap",
+    "post-mortem"
+   ],
+   "identifier": "builtin/python-debugpy",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/python-debugpy",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "requesting-code-review",
+   "description": "Pre-commit review: security scan, quality gates, auto-fix.",
+   "tags": [
+    "code-review",
+    "security",
+    "verification",
+    "quality",
+    "pre-commit",
+    "auto-fix"
+   ],
+   "identifier": "builtin/requesting-code-review",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/requesting-code-review",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "simplify-code",
+   "description": "Parallel 4-agent cleanup of recent code changes.",
+   "tags": [
+    "code-review",
+    "cleanup",
+    "refactor",
+    "delegation",
+    "subagent",
+    "parallel",
+    "simplify"
+   ],
+   "identifier": "builtin/simplify-code",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/simplify-code",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "spike",
+   "description": "Throwaway experiments to validate an idea before build.",
+   "tags": [
+    "spike",
+    "prototype",
+    "experiment",
+    "feasibility",
+    "throwaway",
+    "exploration",
+    "research",
+    "planning",
+    "mvp",
+    "proof-of-concept"
+   ],
+   "identifier": "builtin/spike",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/spike",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "systematic-debugging",
+   "description": "4-phase root cause debugging: understand bugs before fixing.",
+   "tags": [
+    "debugging",
+    "troubleshooting",
+    "problem-solving",
+    "root-cause",
+    "investigation"
+   ],
+   "identifier": "builtin/systematic-debugging",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/systematic-debugging",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "test-driven-development",
+   "description": "TDD: enforce RED-GREEN-REFACTOR, tests before code.",
+   "tags": [
+    "testing",
+    "tdd",
+    "development",
+    "quality",
+    "red-green-refactor"
+   ],
+   "identifier": "builtin/test-driven-development",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/software-development/test-driven-development",
+   "extra": {
+    "provider": "mason"
+   }
+  },
+  {
+   "name": "blocked-page-recovery",
+   "description": "Use when a fetch fails: 403/429, paywall, WAF, bot wall.",
+   "tags": [
+    "Research",
+    "Archives",
+    "Wayback",
+    "Paywall",
+    "WAF",
+    "Fallback"
+   ],
+   "identifier": "builtin/blocked-page-recovery",
+   "source": "builtin",
+   "trust_level": "official",
+   "local_path": "skills/web/blocked-page-recovery",
+   "extra": {
+    "provider": "mason"
+   }
+  }
+ ],
+ "note": "Mason built-in fallback — first-party skills in-repo, no network."
+}

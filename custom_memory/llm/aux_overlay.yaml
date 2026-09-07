@@ -1,0 +1,11 @@
+# Auto-default for Custom Agent — 8 kept aux tasks → local 1B
+# This file is read by a small shim in auxiliary_client.py (added below)
+aux_defaults:
+  compression: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  vision: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  approval: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  title_generation: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  memory_query_rewrite: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  mcp: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  review: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}
+  triage_specifier: {provider: local, base_url: http://127.0.0.1:8080, model: qwen2-0_5b}

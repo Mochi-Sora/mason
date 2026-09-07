@@ -1,0 +1,23 @@
+{
+  "name": "custom-agent-tui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Custom Agent — State-First Minimal TUI (state.md + backup recall + 1B)",
+  "scripts": {
+    "dev": "tsx --watch src/entry.tsx",
+    "start": "tsx src/entry.tsx",
+    "build": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ink": "5.1.0",
+    "ink-text-input": "6.0.0",
+    "react": "19.2.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "@types/react": "19.1.0",
+    "tsx": "4.19.0",
+    "typescript": "5.7.3"
+  }
+}

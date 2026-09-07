@@ -1,0 +1,31 @@
+{
+ "type": "function",
+ "function": {
+  "name": "recall_backup",
+  "description": "Search the session's indexed backup.md file (FTS5) for past context.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "query": {
+     "type": "string",
+     "description": "Search keywords."
+    },
+    "session_id": {
+     "type": "string",
+     "description": "Session id."
+    },
+    "budget_tokens": {
+     "type": "integer",
+     "description": "Token budget, default 2000."
+    },
+    "limit": {
+     "type": "integer",
+     "description": "Max chunks, default 5."
+    }
+   },
+   "required": [
+    "query"
+   ]
+  }
+ }
+}

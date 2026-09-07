@@ -1,0 +1,60 @@
+{
+ "type": "function",
+ "function": {
+  "name": "session_search",
+  "description": "Recall past conversations: search or read old Mason sessions (FTS5), or scroll inside one. Four shapes, picked by args: `query` = discovery (top-N matching sessions, top result fully hydrated); `session_id` + `around_message_id` = scroll (window of messages around an anchor); `session_id` alone = read a whole session — how you resolve an `@session:<profile>/<id>` link (split on '/' into profile + id); no args = browse recent sessions. Results are actual DB messages, no LLM. Searches conversation history ONLY — when the user gave a direct source (URL, file, contact, live system), inspect that first; never conclude 'not found' from history alone. Use for questions about past conversations: 'what did we do about X', 'where did we leave Y'. When referring the user to a session, write its `link` value verbatim inline (it renders as a titled link).",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "query": {
+     "type": "string",
+     "description": "Search query (discovery shape). Keywords, phrases, or boolean expressions to find in past sessions. Omit to browse recent sessions. Ignored when session_id + around_message_id are set (scroll shape)."
+    },
+    "limit": {
+     "type": "integer",
+     "description": "Discovery shape only. Max sessions to return (default 3, max 10). Bump to 5–10 when the topic likely spans several sessions and you want to pick the right one to scroll into.",
+     "default": 3
+    },
+    "sort": {
+     "type": "string",
+     "enum": [
+      "newest",
+      "oldest"
+     ],
+     "description": "Discovery shape only. Temporal bias on top of FTS5 ranking: omit for relevance-only (exploratory recall), 'newest' for \"where did we leave X\", 'oldest' for \"how did X start\"."
+    },
+    "detail": {
+     "type": "string",
+     "enum": [
+      "adaptive",
+      "full"
+     ],
+     "description": "Discovery shape only. 'adaptive' (default) fully hydrates the top-ranked result and returns only the exact anchor message for lower-ranked results. 'full' returns bookends and the complete anchored window for every result.",
+     "default": "adaptive"
+    },
+    "session_id": {
+     "type": "string",
+     "description": "Scroll shape. Session to read inside. Use the session_id returned from a prior discovery call. Must be paired with around_message_id."
+    },
+    "around_message_id": {
+     "type": "integer",
+     "description": "Scroll shape. Message id to center the window on — use match_message_id from a discovery result, or any id from a prior window."
+    },
+    "window": {
+     "type": "integer",
+     "description": "Scroll shape only. Messages to return on each side of the anchor (anchor itself always included). Clamped to [1, 20]. Default 5.",
+     "default": 5
+    },
+    "role_filter": {
+     "type": "string",
+     "description": "Optional. Comma-separated roles to include. Discovery defaults to 'user,assistant' (tool output is usually noise). Pass 'user,assistant,tool' to include tool output (debugging tool behaviour) or 'tool' to search tool output only."
+    },
+    "profile": {
+     "type": "string",
+     "description": "Optional. Read sessions from another Mason profile's database (read-only). Use when resolving an `@session:<profile>/<id>` link: pass the profile segment here with session_id as the id segment. Omit to use the current profile."
+    }
+   },
+   "required": []
+  }
+ }
+}

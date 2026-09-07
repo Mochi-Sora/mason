@@ -1,0 +1,50 @@
+{
+ "type": "function",
+ "function": {
+  "name": "process_manage",
+  "description": "Poll, wait on, or kill background terminal processes (from terminal(background=true)). poll: status + new output. log: full output, paged. wait: block until exit or timeout (partial output on timeout). write vs submit: submit appends Enter — use it to answer prompts; write sends raw bytes, no newline. close: EOF stdin. kill: terminate.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "action": {
+     "type": "string",
+     "enum": [
+      "list",
+      "poll",
+      "log",
+      "wait",
+      "kill",
+      "write",
+      "submit",
+      "close"
+     ]
+    },
+    "session_id": {
+     "type": "string",
+     "description": "From terminal background output; any unique prefix works ('4dae' for proc_4dae56ca81f6). Required except for 'list'."
+    },
+    "data": {
+     "type": "string",
+     "description": "Stdin text for write/submit."
+    },
+    "timeout": {
+     "type": "integer",
+     "description": "Max seconds for 'wait'.",
+     "minimum": 1
+    },
+    "offset": {
+     "type": "integer",
+     "description": "Log line offset (default: last 200)."
+    },
+    "limit": {
+     "type": "integer",
+     "description": "Max log lines.",
+     "minimum": 1
+    }
+   },
+   "required": [
+    "action"
+   ]
+  }
+ }
+}

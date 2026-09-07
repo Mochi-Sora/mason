@@ -1,0 +1,19 @@
+{
+ "type": "function",
+ "function": {
+  "name": "apply_layout",
+  "description": "Apply a saved layout preset to the Mason desktop app when the user asks to rearrange the workspace. Built-ins: default (chat + sidebars), focus (chat only), terminal-deck, quad; plugin/user presets by id. To reveal ONE pane, use focus_pane instead.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "preset": {
+     "type": "string",
+     "description": "Layout preset id to apply (e.g. 'default', 'focus', 'terminal-deck', 'quad', or a user/plugin preset id)."
+    }
+   },
+   "required": [
+    "preset"
+   ]
+  }
+ }
+}

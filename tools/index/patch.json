@@ -1,0 +1,34 @@
+{
+ "type": "function",
+ "function": {
+  "name": "patch",
+  "description": "Targeted find-and-replace edits in files. Use this instead of sed/awk in terminal. Uses fuzzy matching (9 strategies) so minor whitespace/indentation differences won't break it. Returns a unified diff. Auto-runs syntax checks after editing. Finds a unique string and replaces it.",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "path": {
+     "type": "string",
+     "description": "File path to edit."
+    },
+    "old_string": {
+     "type": "string",
+     "description": "Exact text to find and replace. Must be unique in the file unless replace_all=true. Include surrounding context lines to ensure uniqueness."
+    },
+    "new_string": {
+     "type": "string",
+     "description": "Changed replacement text; it must differ from old_string. Pass empty string '' to delete the matched text."
+    },
+    "replace_all": {
+     "type": "boolean",
+     "description": "Replace all occurrences instead of requiring a unique match (default: false)",
+     "default": false
+    }
+   },
+   "required": [
+    "path",
+    "old_string",
+    "new_string"
+   ]
+  }
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "type": "function",
+ "function": {
+  "name": "clarify",
+  "description": "Ask the user one or more questions when you need a decision, clarification, or feedback before proceeding. Pass every question in `questions` (1-5 entries) — a single question is a one-entry array, and several INDEPENDENT questions belong in ONE call (one form beats a chain of clarify calls; if one answer would change another question, ask separately). Per question: single-select (up to 4 choices — put your recommended option FIRST, the UI marks it '(Recommended)' and auto-appends an 'Other' free-text row), multi-select (multi_select=true), or open-ended (omit choices). Options go ONLY in `choices`, never enumerated inside the question text (choices render as pickable rows; options written into the question are dead prose the user can't click). Result: {responses: [...]} in question order (plus timed_out=true if the user stopped part-way). Prefer deciding low-stakes questions yourself; don't use this for dangerous-command confirmation (the terminal tool handles that).",
+  "parameters": {
+   "type": "object",
+   "properties": {
+    "questions": {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 5,
+     "description": "The question(s). Each: question text (options excluded), optional choices (recommended first; omit for free-text), optional multi_select. Responses come back in question order with the question text echoed.",
+     "items": {
+      "type": "object",
+      "properties": {
+       "question": {
+        "type": "string"
+       },
+       "choices": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        },
+        "maxItems": 4
+       },
+       "multi_select": {
+        "type": "boolean"
+       }
+      },
+      "required": [
+       "question"
+      ]
+     }
+    }
+   },
+   "required": [
+    "questions"
+   ]
+  }
+ }
+}
