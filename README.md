@@ -209,10 +209,10 @@ scripts/run_tests.sh
 ## Mason ops (first-run checklist)
 
 ```bash
-# 1. Local 1B (memory, evolution, predictions) — any OpenAI-compat server works:
-ollama pull qwen2:0.5b
-export MASON_1B_URL=http://127.0.0.1:11434 MASON_1B_MODEL=qwen2:0.5b
-# ...or llama-server on :8080 (zero-config default, no env needed)
+# 1. Local 1B sidecar (memory, evolution, predictions) — direct llama.cpp:
+#    drop any qwen2-0_5b GGUF into custom_memory/llm/models/, then:
+systemctl --user enable --now mason-1b   # unit shipped in scripts/ (port 8080)
+#    Alt backend (ollama): export MASON_1B_URL=http://127.0.0.1:11434 MASON_1B_MODEL=qwen2:0.5b
 
 # 2. Regenerate the shipped indexes after pulling new tools/skills/models:
 python scripts/gen_tool_index.py      # tools/index/ (bridge manifest source)
@@ -229,9 +229,11 @@ python scripts/gen_model_catalog.py   # mason_cli/model_catalog_builtin.json (of
 # 5. State lives in ~/.mason (profiles: ~/.mason/profiles/<name>).
 #    Per-profile warm tool sets: ~/.mason/working_sets.json (auto-maintained).
 
-# 6. TUI (live loop): MASON_PROVIDER/MODEL/BASE_URL/API_KEY env, then:
-cd tui && npm install && MASON_PROVIDER=openai MASON_MODEL=qwen2.5:7b \
-  MASON_BASE_URL=http://127.0.0.1:11434/v1 MASON_API_KEY=ollama npm start
+# 6. TUI (live loop): set your main model via MASON_PROVIDER/MODEL/BASE_URL/API_KEY, then:
+cd tui && npm install && MASON_PROVIDER=openai MASON_MODEL=<your-model> \
+  MASON_BASE_URL=<your-base-url> MASON_API_KEY=<your-key> npm start
+# (No models ship with Mason — the 1B sidecar above is the only local weight,
+#  and even that is gitignored. Main model is always yours.)
 ```
 
 Cold start per turn ≈ clarify + 3 bridge tools + name list (~1.7k tok).
