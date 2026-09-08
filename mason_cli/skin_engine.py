@@ -61,35 +61,35 @@ _MASON_BRANDING: Dict[str, str] = _branding(
 
 _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
     "default": {
-        "name": "default", "description": "Classic Mason — gold and kawaii",
+        "name": "default", "description": "Mason — midnight cyan-indigo (matches the M logo)",
         # Dark-authored; values match the TUI's DARK_THEME so both render the same gold.
         "colors": {
-            "banner_border": "#CD7F32", "banner_title": "#FFD700", "banner_accent": "#FFBF00",
-            "banner_dim": "#B8860B", "banner_text": "#FFF8DC", "ui_accent": "#FFBF00",
-            "ui_label": "#DAA520", "ui_ok": "#4caf50", "ui_error": "#ef5350", "ui_warn": "#ffa726",
-            "prompt": "#FFF8DC", "input_rule": "#CD7F32", "response_border": "#FFD700",
-            "status_bar_bg": "#1a1a2e", "status_bar_text": "#C0C0C0",
-            "status_bar_strong": "#FFD700", "status_bar_dim": "#8A7A4A",
-            "status_bar_good": "#8FBC8F", "status_bar_warn": "#FFD700", "status_bar_bad": "#FF8C00",
-            "status_bar_critical": "#FF6B6B", "session_label": "#DAA520",
-            "session_border": "#8B8682", "completion_menu_bg": "#1a1a2e",
-            "completion_menu_current_bg": "#333355", "selection_bg": "#3a3a55",
-            "shell_dollar": "#4dabf7", "voice_status_bg": "#1a1a2e"},
+            "banner_border": "#6366f1", "banner_title": "#22d3ee", "banner_accent": "#38bdf8",
+            "banner_dim": "#64748b", "banner_text": "#e0f2fe", "ui_accent": "#22d3ee",
+            "ui_label": "#818cf8", "ui_ok": "#34d399", "ui_error": "#f87171", "ui_warn": "#fbbf24",
+            "prompt": "#e0f2fe", "input_rule": "#6366f1", "response_border": "#22d3ee",
+            "status_bar_bg": "#0b0f1a", "status_bar_text": "#94a3b8",
+            "status_bar_strong": "#22d3ee", "status_bar_dim": "#64748b",
+            "status_bar_good": "#34d399", "status_bar_warn": "#38bdf8", "status_bar_bad": "#f87171",
+            "status_bar_critical": "#ef4444", "session_label": "#818cf8",
+            "session_border": "#334155", "completion_menu_bg": "#0b0f1a",
+            "completion_menu_current_bg": "#1e293b", "selection_bg": "#1e293b",
+            "shell_dollar": "#22d3ee", "voice_status_bg": "#0b0f1a"},
         # Light overlay (merged onto `colors`). Goldenrod ladder: on white the vivid
         # #FFD700/#FFBF00 read as glare and WCAG-darkened mustard (#867000) as mud; the
         # statusbar's goldenrod family (#B8860B/#DAA520) keeps the hue, tames saturation.
         # Hierarchy on white: ink body 8.9:1 > fade 5.2 > label 3.7 > muted 3.3 > title 2.7 >
         # headers 2.4. Fills (*_bg) flip the dark navy surfaces to light polarity.
         "light_colors": {
-            "banner_title": "#C8961E", "banner_accent": "#D89B04", "banner_dim": "#B8860B",
-            "banner_text": "#5C4718", "ui_accent": "#D89B04", "ui_label": "#A97E10",
-            "ui_ok": "#2E7D32", "ui_error": "#C62828", "ui_warn": "#D97706", "prompt": "#5C4718",
-            "response_border": "#C8961E", "session_label": "#A97E10", "status_bar_text": "#6F6F6F",
-            "status_bar_strong": "#C8961E", "status_bar_dim": "#9A8A5A",
-            "status_bar_good": "#2E7D32", "status_bar_warn": "#C8961E", "status_bar_bad": "#C2410C",
-            "status_bar_critical": "#B91C1C", "shell_dollar": "#1E6FC0",
-            "completion_menu_bg": "#F5F5F5", "completion_menu_current_bg": "#E0D1BF",
-            "selection_bg": "#D4E4F7", "status_bar_bg": "#F5F5F5", "voice_status_bg": "#F5F5F5"},
+            "banner_title": "#0e7490", "banner_accent": "#4338ca", "banner_dim": "#64748b",
+            "banner_text": "#0f172a", "ui_accent": "#4338ca", "ui_label": "#6366f1",
+            "ui_ok": "#059669", "ui_error": "#dc2626", "ui_warn": "#d97706", "prompt": "#0f172a",
+            "response_border": "#0e7490", "session_label": "#4338ca", "status_bar_text": "#475569",
+            "status_bar_strong": "#0e7490", "status_bar_dim": "#94a3b8",
+            "status_bar_good": "#059669", "status_bar_warn": "#4338ca", "status_bar_bad": "#dc2626",
+            "status_bar_critical": "#b91c1c", "shell_dollar": "#0e7490",
+            "completion_menu_bg": "#f8fafc", "completion_menu_current_bg": "#e0f2fe",
+            "selection_bg": "#e0e7ff", "status_bar_bg": "#f1f5f9", "voice_status_bg": "#f1f5f9"},
         "spinner": {},  # empty = hardcoded defaults in display.py
         "branding": _MASON_BRANDING,
         "tool_prefix": "┊"},
@@ -462,8 +462,8 @@ def get_active_goodbye(fallback: str = "Goodbye! ⚕") -> str:
 # Palette resolution order for prompt_toolkit styles: (name, skin color key, fallback). A
 # fallback starting with "@" names an earlier entry (so a missing key inherits its remapped value).
 _STYLE_PALETTE = (
-    ("prompt", "prompt", ""), ("input_rule", "input_rule", "#CD7F32"),
-    ("title", "banner_title", "#FFD700"), ("text", "banner_text", "#FFF8DC"),
+    ("prompt", "prompt", ""), ("input_rule", "input_rule", "#6366f1"),
+    ("title", "banner_title", "#22d3ee"), ("text", "banner_text", "#e0f2fe"),
     ("dim", "banner_dim", "#555555"), ("label", "ui_label", "@title"), ("warn", "ui_warn", "#FF8C00"),
     ("error", "ui_error", "#FF6B6B"), ("status_bg", "status_bar_bg", "#1a1a2e"),
     ("status_text", "status_bar_text", "@text"), ("status_strong", "status_bar_strong", "@title"),

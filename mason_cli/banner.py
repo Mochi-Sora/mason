@@ -747,7 +747,7 @@ def _banner_left_lines(model: str, cwd: str, session_id, context_length, provide
         lines.append(f"[bold red]⚠ YOLO mode[/] [dim {dim}]— all approval prompts bypassed[/]")
     lines.append(f"[dim {dim}]{cwd}[/]")
     if session_id:
-        lines.append(f"[dim {_skin_color('session_border', '#8B8682')}]Session: {session_id}[/]")
+        lines.append(f"[dim {_skin_color('session_border', '#334155')}]Session: {session_id}[/]")
     return lines
 
 
@@ -817,9 +817,9 @@ def build_welcome_banner(
         availability = compute_toolset_availability(enabled_toolsets)
     _enabled_ts = {str(t) for t in enabled_toolsets}
     # Resolve skin colors once for the entire banner
-    accent = _skin_color("banner_accent", "#FFBF00")
-    dim = _skin_color("banner_dim", "#B8860B")
-    text = _skin_color("banner_text", "#FFF8DC")
+    accent = _skin_color("banner_accent", "#38bdf8")
+    dim = _skin_color("banner_dim", "#64748b")
+    text = _skin_color("banner_text", "#e0f2fe")
     # Use skin's custom caduceus art if provided
     _bskin = _quiet(_active_skin)
     left_lines = ["", getattr(_bskin, "banner_hero", None) or MASON_CADUCEUS, ""]
@@ -880,8 +880,8 @@ def build_welcome_banner(
     if release_info:
         version_label = f"[link={release_info[1]}]{version_label}[/link]"
     outer_panel = Panel(
-        layout_table, title=f"[bold {_skin_color('banner_title', '#FFD700')}]{version_label}[/]",
-        border_style=_skin_color("banner_border", "#CD7F32"), padding=(0, 2))
+        layout_table, title=f"[bold {_skin_color('banner_title', '#22d3ee')}]{version_label}[/]",
+        border_style=_skin_color("banner_border", "#6366f1"), padding=(0, 2))
     console.print()
     if shutil.get_terminal_size().columns >= 95:
         console.print(getattr(_bskin, "banner_logo", None) or MASON_AGENT_LOGO)
