@@ -29,6 +29,23 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 
 _AGENTS: dict = {}
+_TURNS: dict = {}  # session_id -> {"thread": Thread}
+_WRITE_LOCK = None
+
+
+def _lock():
+    global _WRITE_LOCK
+    if _WRITE_LOCK is None:
+        import threading
+        _WRITE_LOCK = threading.Lock()
+    return _WRITE_LOCK
+
+
+def _emit(obj: dict) -> None:
+    import threading as _t
+    with _lock():
+        sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
 
 
 def _assert_repo_import() -> None:
@@ -75,19 +92,55 @@ def _handle(req: dict) -> dict:
         msg = str(req.get("message") or "")
         if not msg.strip():
             return {"id": rid, "ok": False, "error": "empty message"}
+        turn = _TURNS.get(sid)
+        if turn is not None and turn["thread"].is_alive():
+            return {"id": rid, "ok": False, "error": "a turn is already running — /stop first"}
+        import threading
         try:
             agent = _agent_for(sid)
-            with contextlib.redirect_stdout(io.StringIO()):
-                result = agent.run_conversation(msg)
         except Exception as e:
             return {"id": rid, "ok": False, "error": f"{type(e).__name__}: {e}"[:500]}
-        if isinstance(result, dict):
-            reply = result.get("final_response") or ""
-        else:
-            reply = str(result or "")
-        return {"id": rid, "ok": True, "reply": reply}
+
+        def _run():
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    result = agent.run_conversation(
+                        msg,
+                        stream_callback=lambda delta: _emit({"id": rid, "chunk": str(delta or "")}),
+                    )
+            except Exception as e:
+                _emit({"id": rid, "ok": False,
+                       "error": f"{type(e).__name__}: {e}"[:500]})
+                _TURNS.pop(sid, None)
+                return
+            if isinstance(result, dict):
+                reply = result.get("final_response") or ""
+            else:
+                reply = str(result or "")
+            _emit({"id": rid, "ok": True, "reply": reply})
+            _TURNS.pop(sid, None)
+
+        _TURNS[sid] = {"thread": threading.Thread(target=_run, daemon=True, name=f"tui-{sid}")}
+        _TURNS[sid]["thread"].start()
+        return {"id": rid, "ok": True, "started": True}
+    if op == "stop":
+        sid = str(req.get("session_id") or "tui-1")
+        agent = _AGENTS.get(sid)
+        if agent is None:
+            return {"id": rid, "ok": False, "error": "no such session"}
+        try:
+            agent._interrupt_requested = True
+            hard = getattr(agent, "_hard_interrupt_requested", None)
+            if hard is not None and hasattr(hard, "set"):
+                hard.set()  # type: ignore[union-attr]
+        except Exception as e:
+            return {"id": rid, "ok": False, "error": f"stop failed: {e}"[:200]}
+        return {"id": rid, "ok": True, "stopped": True}
     if op == "close":
         sid = str(req.get("session_id") or "tui-1")
+        turn = _TURNS.get(sid)
+        if turn is not None and turn["thread"].is_alive():
+            return {"id": rid, "ok": False, "error": "turn running — /stop first, then /close"}
         try:
             from sessions.manager import on_session_close
             with contextlib.redirect_stdout(io.StringIO()):
@@ -108,16 +161,14 @@ def main() -> None:
         try:
             req = json.loads(line)
         except json.JSONDecodeError:
-            sys.stdout.write(json.dumps({"id": None, "ok": False, "error": "bad json"}) + "\n")
-            sys.stdout.flush()
+            _emit({"id": None, "ok": False, "error": "bad json"})
             continue
         try:
             resp = _handle(req if isinstance(req, dict) else {})
         except Exception as e:  # never kill the bridge on a bad turn
             resp = {"id": (req.get("id") if isinstance(req, dict) else None),
                     "ok": False, "error": f"bridge: {e}"[:300]}
-        sys.stdout.write(json.dumps(resp, ensure_ascii=False) + "\n")
-        sys.stdout.flush()
+        _emit(resp)
 
 
 if __name__ == "__main__":

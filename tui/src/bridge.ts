@@ -2,15 +2,20 @@ import {spawn, ChildProcess} from 'node:child_process';
 import {join, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-type Pending = {resolve: (v: any) => void; reject: (e: Error) => void};
+type Pending = {
+  resolve: (v: any) => void;
+  reject: (e: Error) => void;
+  onChunk?: (text: string) => void;
+};
 
 // stdio JSON-RPC client for tui/bridge.py (one JSON object per line).
+// Auto-respawns the bridge if it dies; chunk lines stream into onChunk.
 export class Bridge {
   private proc: ChildProcess | null = null;
   private nextId = 1;
   private pending = new Map<number, Pending>();
   private buf = '';
-  private started = false;
+  starts = 0; // times the bridge process was spawned (reconnect signal)
 
   private root(): string {
     // src/bridge.ts -> tui/bridge.py
@@ -18,15 +23,19 @@ export class Bridge {
   }
 
   start(python = 'python3'): void {
-    if (this.started) return;
-    this.started = true;
+    if (this.proc) return;
+    this.starts += 1;
     this.proc = spawn(python, [this.root()], {stdio: ['pipe', 'pipe', 'inherit']});
     this.proc.stdout!.on('data', (d: Buffer) => this.onData(d.toString()));
     this.proc.on('exit', () => {
-      this.proc = null;
-      for (const [, p] of this.pending) p.reject(new Error('bridge exited'));
+      this.proc = null; // next send() respawns (reconnect)
+      for (const [, p] of this.pending) p.reject(new Error('bridge exited — retry sends respawn it'));
       this.pending.clear();
     });
+  }
+
+  alive(): boolean {
+    return this.proc !== null;
   }
 
   private onData(chunk: string): void {
@@ -36,24 +45,28 @@ export class Bridge {
       const line = this.buf.slice(0, nl).trim();
       this.buf = this.buf.slice(nl + 1);
       if (!line) continue;
+      let msg: any;
       try {
-        const msg = JSON.parse(line);
-        const p = this.pending.get(msg.id);
-        if (p) {
-          this.pending.delete(msg.id);
-          p.resolve(msg);
-        }
+        msg = JSON.parse(line);
       } catch {
-        /* partial line — wait for more */
+        continue; // partial line — wait for more
       }
+      const p = this.pending.get(msg.id);
+      if (!p) continue;
+      if (typeof msg.chunk === 'string' && !('ok' in msg)) {
+        p.onChunk?.(msg.chunk);
+        continue;
+      }
+      this.pending.delete(msg.id);
+      p.resolve(msg);
     }
   }
 
-  send(op: string, extra: Record<string, any> = {}): Promise<any> {
+  send(op: string, extra: Record<string, any> = {}, onChunk?: (text: string) => void): Promise<any> {
     this.start();
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
-      this.pending.set(id, {resolve, reject});
+      this.pending.set(id, {resolve, reject, onChunk});
       try {
         this.proc!.stdin!.write(JSON.stringify({id, op, ...extra}) + '\n');
       } catch (e) {
