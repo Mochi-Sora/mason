@@ -1540,12 +1540,39 @@ def build_api_kwargs(agent, api_messages: list, tools_for_api: list | None = Non
     )
 
 
+def _dedupe_tool_schemas(tools_for_api):
+    """Keep-first dedupe by function name (last-line guard, #17335 class).
+
+    DeepSeek/Kimi/MiMo reject duplicate tool names with HTTP 400. Every
+    upstream merge point dedupes, but plugin/MCP/bridge paths evolve
+    independently — a duplicate reaching the API builder means a NEW source
+    appeared, so drop it (turn survives) and name it loudly in the log.
+    Never raises; unparseable entries pass through untouched.
+    """
+    if not tools_for_api:
+        return tools_for_api
+    try:
+        seen: set = set()
+        unique = []
+        for t in tools_for_api:
+            n = t.get("function", {}).get("name") if isinstance(t, dict) else None
+            if n is None or n not in seen:
+                seen.add(n)
+                unique.append(t)
+            else:
+                logger.warning("duplicate tool schema %r dropped before API call", n)
+        return unique if len(unique) != len(tools_for_api) else tools_for_api
+    except Exception:
+        return tools_for_api
+
+
 def _build_api_kwargs_for_mode(agent, api_messages: list, tools_for_api: list | None = None) -> dict:
     # One-shot continuation override — consumed exactly once, on the FIRST
     # request this call builds (only one api_mode branch runs per invocation).
     reasoning_config = _reasoning_config_for_wire(agent)
     if tools_for_api is None:
         tools_for_api = agent.tools
+    tools_for_api = _dedupe_tool_schemas(tools_for_api)
     # The one place request_overrides are consumed: static /fast values are already pinned
     # in agent.request_overrides; auto/cold windows layer the fast override per request.
     request_overrides = effective_request_overrides(agent)
