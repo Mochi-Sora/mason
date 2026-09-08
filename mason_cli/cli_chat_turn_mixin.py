@@ -592,12 +592,12 @@ class CLIChatTurnMixin:
                 from mason_cli.skin_engine import get_active_skin
                 _skin = get_active_skin()
                 label = _skin.get_branding("response_label", "⚕ Mason")
-                _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#CD7F32"))
-                _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#FFF8DC"))
+                _resp_color = _maybe_remap_for_light_mode(_skin.get_color("response_border", "#6366f1"))
+                _resp_text = _maybe_remap_for_light_mode(_skin.get_color("banner_text", "#e0f2fe"))
             except Exception:
                 label = "⚕ Mason"
-                _resp_color = _maybe_remap_for_light_mode("#CD7F32")
-                _resp_text = _maybe_remap_for_light_mode("#FFF8DC")
+                _resp_color = _maybe_remap_for_light_mode("#6366f1")
+                _resp_text = _maybe_remap_for_light_mode("#e0f2fe")
 
             is_error_response = turn.result and (turn.result.get("failed") or turn.result.get("partial"))
             already_streamed = self._stream_started and self._stream_box_opened and not is_error_response
@@ -632,8 +632,8 @@ class CLIChatTurnMixin:
                 _cta_lines.append("Or switch providers with [bold]/model <model> --provider <provider>[/].")
                 try:
                     ChatConsole().print(Panel(
-                        "\n".join(_cta_lines), title="[#CD7F32 bold]⚡ Out of credits[/]",
-                        title_align="left", border_style="#CD7F32", box=rich_box.HORIZONTALS,
+                        "\n".join(_cta_lines), title="[#6366f1 bold]⚡ Out of credits[/]",
+                        title_align="left", border_style="#6366f1", box=rich_box.HORIZONTALS,
                         padding=(1, 4), width=self._scrollback_box_width(),
                     ))
                 except Exception:
