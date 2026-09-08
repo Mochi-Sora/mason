@@ -148,6 +148,8 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("sessions", "Browse and resume previous sessions", "Session"),
     CommandDef("revert", "Undo an agent terminal execution (list journal, restore snapshot)", "Session",
                args_hint="[list|last|<id>]"),
+    CommandDef("onboard", "First-run setup check: deps, 1B model, server, smoke test", "Configuration",
+               args_hint="[--check-only] [--yes]"),
 
     # Configuration
     CommandDef("config", "Show current configuration", "Configuration",

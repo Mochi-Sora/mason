@@ -1383,6 +1383,14 @@ class CLICommandsMixin:
         else:
             _cp(f"  ✗ {res.get('error', 'revert failed')}")
 
+    def _handle_onboard_command(self, cmd_original: str) -> None:
+        """Handle /onboard [--check-only] [--yes] — first-run setup pass."""
+        from mason_cli.onboard import run, render
+        arg = (_command_arg(cmd_original) or "")
+        report = run(check_only="--check-only" in arg, fetch="--yes" in arg)
+        for line in render(report).splitlines():
+            _cp("  " + line if line.strip() else line)
+
     def _handle_branch_command(self, cmd_original: str) -> None:
         """Handle /branch [name] — fork the current session into a new independent copy of the
         full history so a different approach can be explored without losing the original."""

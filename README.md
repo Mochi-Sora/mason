@@ -23,12 +23,27 @@ Use any model you want — OpenRouter, OpenAI, your own endpoint, and many other
 
 ## Quick Install
 
-### Linux, macOS, WSL2, Termux
+### Linux, macOS, WSL2
 
 ```bash
-git clone <your-mason-remote> && cd mason
-MASON_REPO_URL=<your-mason-remote> ./scripts/install.sh
+git clone https://github.com/Mochi-Sora/mason.git && cd mason
+python -m venv .venv && source .venv/bin/activate
+pip install -e "."
+mason onboard            # checks deps, prints what's missing + how to fix
+mason onboard --yes      # also downloads the ~400MB 1B model (HuggingFace)
+mason                    # start chatting!
 ```
+
+`mason onboard` is the installer UX: it verifies Python ≥3.11, git, ripgrep,
+node, llama-server, the 1B GGUF, and the TUI deps, writes a minimal
+`~/.mason/config.yaml` if you have none, and finishes with a real 1B smoke
+test. `--check-only` reports without writing anything. No API keys needed —
+the default brain is local (llama-server on :8080).
+
+For the server side you need `llama-server` on PATH: `brew install llama.cpp`
+(macOS) or your distro package (`llama.cpp` on Arch), then run it in the
+background: `llama-server -m custom_memory/llm/models/qwen2-0_5b-instruct-q4_k_m.gguf --port 8080`.
+For the Ink TUI: `cd tui && npm install` (checked by onboard).
 
 ### Windows (native, PowerShell)
 
