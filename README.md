@@ -3,7 +3,7 @@
 </p>
 
 # Mason ◈
-> Detached fork of [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research (MIT) — rebranded, stripped to core, and rebuilt with custom memory (mem0 short-term + Gbrain-style long-term), per-session state history, and nightly self-evolution. Contains no upstream remote: set your own.
+> Detached fork of [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research (MIT) — rebranded, stripped to core, and rebuilt with custom memory (mem0 short-term + Gbrain-style long-term), per-session state history, and nightly self-evolution. Maintained by [Mochi Sora](https://github.com/Mochi-Sora).
 
 **The self-improving AI agent, state-first edition.** It creates skills from experience, improves them during use, keeps a tiny per-session state (90% context cut) with an indexed backup it can search instantly, and runs a nightly evolution sweep. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. Talk to it from Telegram while it works on a cloud VM.
 
