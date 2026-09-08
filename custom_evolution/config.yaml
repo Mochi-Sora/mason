@@ -2,7 +2,7 @@ avg_evo:
   enabled: true
   max_tokens: 256
   temperature: 0.2
-  timeout_ms: 800
+  timeout_ms: 45000  # fire-and-forget thread; clamped to >=15s in hook.py
 nightly:
   hour: 2  # 02:00 local
   minute: 0

@@ -19,13 +19,21 @@ RULES:
    b. Old text matches what the target file plausibly contains (names, format).
    c. No deletions of logic, tests, or guards. No new dependencies, no network calls.
    d. The result stays syntactically plausible (balanced brackets/quotes).
-2. Trivially fixable flaw (whitespace, quoting) → valid=true, put the corrected
+2. fixed_patch FORMAT (machine-applied — follow it exactly):
+   - summaries.json line edit: SET tools/index/summaries.json[<tool_name>] = <new one-liner, ≤120 chars, no quotes>
+   - anything else: copy the corrected patch text verbatim.
+3. Trivially fixable flaw (whitespace, quoting) → valid=true, put the corrected
    patch in fixed_patch, reason says what you fixed.
-3. Anything else wrong → valid=false, fixed_patch="", reason names the exact flaw.
-4. NEVER approve: rm/deletion commands, credential changes, mass renames,
+4. Anything else wrong → valid=false, fixed_patch="", reason names the exact flaw.
+5. NEVER approve: rm/deletion commands, credential changes, mass renames,
    patches to files outside the stated target.
 
-EXAMPLE:
+EXAMPLE (summaries edit):
+TARGET: tools/index/summaries.json
+PATCH: recall_backup summary says backup.db but file is backup.md
+OUTPUT: {{"valid": true, "fixed_patch": "SET tools/index/summaries.json[recall_backup] = search this session's indexed backup file", "reason": "one-line manifest correction"}}
+
+EXAMPLE (reject):
 TARGET: custom_memory/llm/tasks/extract_task.py
 PATCH: change '"Max 3 facts' to 'Max 5 facts'
 OUTPUT: {{"valid": false, "fixed_patch": "", "reason": "contradicts the ADD-only max-3 contract; not a typo fix"}}

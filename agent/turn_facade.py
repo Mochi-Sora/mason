@@ -138,6 +138,17 @@ class TurnFacadeMixin:
                 else "failed" if terminal.get("failed") is True
                 else "success"
             )
+            # Mason Avg-evo: per-response 1B fixer, fire-and-forget (never blocks).
+            # Skipped only for interrupted turns (no final response to judge).
+            try:
+                if not terminal.get("interrupted"):
+                    from custom_evolution.hook import on_response
+                    _evo_final = terminal.get("final_response", "") if terminal else ""
+                    _evo_user = user_message if isinstance(user_message, str) else str(user_message or "")
+                    on_response(None, _evo_user, _evo_final,
+                                messages=terminal.get("messages") if terminal else None)
+            except Exception:
+                pass
             relay_runtime.SESSION_COORDINATOR.finish_logical_calls(relay_turn, outcome=relay_outcome)
             if task_started:
                 task_finished = True

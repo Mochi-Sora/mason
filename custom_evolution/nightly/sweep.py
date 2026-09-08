@@ -41,10 +41,32 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
     if not errors:
         errors = "(no tool errors)"
 
+    # Evolution memory: recent applied/rejected/failed decisions, so tonight
+    # never re-proposes what was already decided.
+    evo_memory = ""
+    try:
+        _mem = base / "custom_evolution" / "memory.jsonl"
+        if _mem.exists():
+            _lines = _mem.read_text().splitlines()[-10:]
+            _bits = []
+            for _ln in _lines:
+                try:
+                    _j = json.loads(_ln)
+                    _bits.append(f"{_j.get('kind')}: {_j.get('summary','')[:100]}")
+                except Exception:
+                    continue
+            if _bits:
+                evo_memory = "Decided before (do NOT re-propose):\n" + "\n".join(f"- {_b}" for _b in _bits)
+    except Exception:
+        pass
+
     # === Lightweight (1B) ===
     light_report = "(1B unavailable — heuristic report)"
     if llm_1b:
-        prompt = light_prompt(bullets or "(no short-term today)", fixes, errors, date)
+        # evo_memory rides the fixes slot (both are "things to consider", capped).
+        prompt = light_prompt(bullets or "(no short-term today)",
+                              (fixes + ("\n" + evo_memory if evo_memory else ""))[:2000],
+                              errors, date)
         try:
             # stop=[] : the report is multi-paragraph; the client's default
             # blank-line stop would decapitate it after the header.
@@ -76,6 +98,16 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
     out_light.write_text(light_report)
 
     result = {"date": date, "light_report": str(out_light), "heavy": None}
+
+    # === Pending micro-patches: validate + apply safe ones (1B-gated) ===
+    try:
+        from custom_evolution.avg_evo.patcher import apply_pending
+        _outcomes = apply_pending(base, dry_run=False, llm_client=llm_1b)
+        result["patches"] = _outcomes
+        with open(out_light, "a") as f:
+            f.write("\n## Applied micro-patches\n" + "".join(f"- {o}\n" for o in _outcomes[:20]))
+    except Exception as e:
+        result["patches"] = [f"patch pass failed: {e}"]
 
     # === Tool summaries (1B): keep the bridge manifest sharp ===
     try:
