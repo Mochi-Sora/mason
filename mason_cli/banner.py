@@ -770,7 +770,7 @@ def _banner_tool_lines(
     def _color_tool(name: Optional[str]) -> str:
         if name is None:  # truncation marker
             return "[dim]...[/]"
-        color = "red" if name in disabled_tools else "yellow" if name in lazy_tools else text
+        color = "red" if name in disabled_tools else accent if name in lazy_tools else text
         return f"[{color}]{name}[/]"
     sorted_toolsets = sorted(toolsets_dict.keys())
     for toolset in sorted_toolsets[:8]:

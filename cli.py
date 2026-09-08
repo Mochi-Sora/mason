@@ -3675,12 +3675,12 @@ class MasonCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin, CLITuiMixi
 
         _welcome_skin = None  # stays None when the skin engine failed
         _welcome_text = "Welcome to Mason! Type your message or /help for commands."
-        _welcome_color = "#FFF8DC"
+        _welcome_color = "#22d3ee"
         try:
             from mason_cli.skin_engine import get_active_skin
             _welcome_skin = get_active_skin()
             _welcome_text = _welcome_skin.get_branding("welcome", _welcome_text)
-            _welcome_color = _welcome_skin.get_color("banner_text", _welcome_color)
+            _welcome_color = _welcome_skin.get_color("banner_title", _welcome_color)
         except Exception:
             pass
         self._console_print(f"[{_welcome_color}]{_welcome_text}[/]")
