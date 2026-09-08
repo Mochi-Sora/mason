@@ -371,6 +371,7 @@ from mason_cli.subcommands.journey import build_journey_parser
 from mason_cli.subcommands.computer_use import build_computer_use_parser
 from mason_cli.subcommands.sessions import build_sessions_parser
 from mason_cli.subcommands.completion import build_completion_parser
+from mason_cli.subcommands.onboard import build_onboard_parser
 
 
 def _require_tty(command_name: str) -> None:
@@ -2313,7 +2314,7 @@ def _coalesce_session_name_args(argv: list) -> list:
         "auth", "status", "cron", "doctor", "config", "pairing", "skills", "tools", "mcp",
         "sessions", "insights", "update", "uninstall", "profile", "dashboard", "serve",
         "desktop", "gui", "honcho", "claw", "plugins", "security", "acp", "webhook", "peer",
-        "memory", "dump", "debug", "backup", "import", "completion", "logs",
+        "memory", "dump", "debug", "backup", "import", "completion", "logs", "onboard",
     }
     _SESSION_FLAGS = {"-c", "--continue", "-r", "--resume"}
 
@@ -3246,6 +3247,7 @@ def _build_cli_parser():
     build_acp_parser(subparsers, cmd_acp=cmd_acp)
     build_profile_parser(subparsers, cmd_profile=cmd_profile)
     build_completion_parser(subparsers, cmd_completion=cmd_completion, parser=parser)
+    build_onboard_parser(subparsers)
     build_dashboard_parser(
         subparsers,
         cmd_dashboard=cmd_dashboard,
