@@ -279,6 +279,15 @@ DEFAULT_CONFIG = {
         "timeout": 180,
         # Seconds between SIGTERM and escalated SIGKILL for host process trees (browser daemons). 0
         # = SIGTERM only.
+        # Mason revert: pre-execution snapshots for terminal commands.
+        "revert": {
+            # Master switch (MASON_REVERT=off also disables).
+            "enabled": True,
+            # Non-repo dirs bigger than this (MB) are journaled, not snapshotted.
+            "max_snapshot_mb": 100,
+            # Snapshot generations kept per session (oldest pruned).
+            "retain": 20,
+        },
         "daemon_term_grace_seconds": 2.0,
         # Max seconds a one-shot CLI run (-q/-Q/-z) lingers for tracked notify_on_complete
         # background processes to finish. The dying parent owns their stdout pipes, so exiting

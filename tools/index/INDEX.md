@@ -1,6 +1,6 @@
 # Mason tool index
 
-86 tools. One line each — this is the model's search surface.
+87 tools. One line each — this is the model's search surface.
 Full schemas: `<name>.json`. Summaries: `summaries.json` (1B-maintained).
 
 - annotate_preview: Highlight elements on the preview-pane page, lastingly (drive_preview's own marks fade; annotations…
@@ -28,6 +28,7 @@ Full schemas: `<name>.json`. Summaries: `summaries.json` (1B-maintained).
 - discord: Mason tool — load schema with tool_describe
 - discord_admin: Mason tool — load schema with tool_describe
 - drive_preview: Use the web page open in the desktop preview pane (the one `desktop_preview` opens): log in, fill…
+- exec_revert: Mason tool — load schema with tool_describe
 - execute_code: Run Python that calls Mason tools programmatically. Use when you need 3+ tool calls with logic…
 - feishu_doc_read: Mason tool — load schema with tool_describe
 - feishu_drive_add_comment: Mason tool — load schema with tool_describe

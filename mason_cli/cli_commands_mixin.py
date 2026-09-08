@@ -1358,6 +1358,31 @@ class CLICommandsMixin:
         elif not self._show_recent_sessions(reason="sessions"):
             _cp("  (._.) No previous sessions yet.")
 
+    def _handle_revert_command(self, cmd_original: str) -> None:
+        """Handle /revert [list|last|<id>] — restore the filesystem to before an
+        agent terminal execution. Git worktrees reset to the pinned HEAD (with a
+        safety stash); other dirs restore from the snapshot copy. External
+        effects (network, sent data) are never undone — filesystem only."""
+        from tools.exec_revert import read_log, revert
+        arg = (_command_arg(cmd_original) or "").strip()
+        if not arg or arg.lower() in {"list", "ls"}:
+            entries = read_log(limit=15)
+            if not entries:
+                return _cp("  No executions journaled yet.")
+            for e in entries:
+                flag = "✓" if e.get("snapshot") else "·"
+                _cp(f"  {flag} {e.get('id', '?')[:12]}  {e.get('ts', '')[:19]}  "
+                    f"{(e.get('cmd') or '')[:60]}")
+            _cp("  /revert last|<id> restores. ✓ = snapshot, · = journal-only.")
+            return
+        res = revert("last" if arg.lower() == "last" else arg)
+        if res.get("ok"):
+            _cp(f"  Restored {res.get('id', '')[:12]}: {res.get('restored', '')}")
+            if res.get("warning"):
+                _cp(f"  ⚠ {res['warning']}")
+        else:
+            _cp(f"  ✗ {res.get('error', 'revert failed')}")
+
     def _handle_branch_command(self, cmd_original: str) -> None:
         """Handle /branch [name] — fork the current session into a new independent copy of the
         full history so a different approach can be explored without losing the original."""

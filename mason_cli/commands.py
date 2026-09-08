@@ -146,6 +146,8 @@ COMMAND_REGISTRY: list[CommandDef] = [
     CommandDef("resume", "Resume a previously-named session", "Session",
                args_hint="[name]", argument_mode="mixed"),
     CommandDef("sessions", "Browse and resume previous sessions", "Session"),
+    CommandDef("revert", "Undo an agent terminal execution (list journal, restore snapshot)", "Session",
+               args_hint="[list|last|<id>]"),
 
     # Configuration
     CommandDef("config", "Show current configuration", "Configuration",

@@ -1174,6 +1174,19 @@ def terminal_tool(
         # force=True means the user already confirmed.
         verdict = _run_approval_guards(command, env_type, plan.config, force=force)
 
+        # Mason revert: journal + pre-execution snapshot AFTER approval passes
+        # (rejected commands leave no trace). Local backend snapshots the tree
+        # (git worktree: head pin, else bounded copy); remote backends journal
+        # only. `mason revert` / exec_revert restores by journal id.
+        try:
+            from tools.exec_revert import snapshot_before
+            _snap_cwd = workdir or cwd
+            snapshot_before(command, str(_snap_cwd or "."),
+                            session_id or session_key or (task_id or ""),
+                            background=bool(background), backend=str(env_type or "local"))
+        except Exception:
+            pass
+
         pty_disabled = pty and _command_requires_pipe_stdin(command)
         if background:
             return spawn_background_process(
