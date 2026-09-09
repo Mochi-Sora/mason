@@ -1,6 +1,6 @@
 """Session lifecycle: close → promote → purge"""
 import pathlib, json
-from .container import ROOT, purge_session, recall_backup
+from .container import get_sessions_root, purge_session, recall_backup
 
 def on_session_close(session_id: str, base: pathlib.Path | None = None):
     base = pathlib.Path(base) if base else pathlib.Path(__file__).parent.parent
@@ -9,7 +9,7 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
     try:
         from custom_memory.llm.client import LlamaClient
         from custom_memory.llm.tasks.session_promote_task import build_prompt
-        d = ROOT / session_id
+        d = get_sessions_root() / session_id
         backup = (d / "backup.md").read_text() if (d / "backup.md").exists() else ""
         if not backup.strip():
             purge_session(session_id)

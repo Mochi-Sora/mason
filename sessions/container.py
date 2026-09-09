@@ -1,14 +1,45 @@
 """Isolated session containers — each session is a folder
 sessions/<id>/state.md + backup.md + backup.db (Gbrain-inspired index) + meta.json
+Stored under MASON_HOME/sessions (migrated from repo tree).
 """
-import pathlib, json, sqlite3, datetime, hashlib
+import pathlib, json, sqlite3, datetime, hashlib, shutil
 
-ROOT = pathlib.Path(__file__).parent.parent / "sessions"
 BACKUP_LIMIT = 10_000_000  # 10M chars
 BACKUP_WATCH = 0.85        # 85% triggers summary
 
+_LEGACY_ROOT = pathlib.Path(__file__).parent.parent / "sessions"
+
+def get_sessions_root() -> pathlib.Path:
+    """MASON_HOME/sessions, with one-time migration from legacy repo location."""
+    try:
+        from mason_constants import get_mason_home
+        p = get_mason_home() / "sessions"
+    except Exception:
+        p = pathlib.Path.home() / ".mason" / "sessions"
+    p.mkdir(parents=True, exist_ok=True)
+    # one-time migration: move existing session dirs from legacy repo tree
+    if _LEGACY_ROOT.exists() and _LEGACY_ROOT.resolve() != p.resolve():
+        for child in list(_LEGACY_ROOT.iterdir()):
+            if child.name.startswith("__") or child.name == "__pycache__" or child.suffix == ".py":
+                continue
+            dest = p / child.name
+            if dest.exists():
+                continue
+            try:
+                shutil.move(str(child), str(dest))
+            except Exception:
+                pass
+    return p
+
+# Back-compat alias — some callers `from sessions.container import ROOT`
+# Keep it as the new location so old code keeps working.
+try:
+    ROOT = get_sessions_root()
+except Exception:
+    ROOT = _LEGACY_ROOT
+
 def _session_dir(session_id: str) -> pathlib.Path:
-    d = ROOT / session_id
+    d = get_sessions_root() / session_id
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -48,7 +79,10 @@ def update_state(session_id: str, content: str):
 
 def recall_backup(session_id: str, query: str, budget_tokens: int = 2000, limit: int = 5) -> dict:
     """Gbrain-inspired retrieval: FTS + budget packing"""
-    d = ROOT / session_id
+    d = get_sessions_root() / session_id
+    # fallback: also check legacy location for unmigrated sessions
+    if not (d / "backup.db").exists() and (_LEGACY_ROOT / session_id / "backup.db").exists():
+        d = _LEGACY_ROOT / session_id
     if not (d / "backup.db").exists():
         return {"facts": [], "results": [], "budget_used": 0, "total": 0}
     db = sqlite3.connect(d / "backup.db")
@@ -104,10 +138,13 @@ def _trigger_summary(session_id: str):
         pass
 
 def purge_session(session_id: str):
-    import shutil
-    d = ROOT / session_id
+    d = get_sessions_root() / session_id
     if d.exists():
         shutil.rmtree(d)
+    # also clean legacy if still there
+    ld = _LEGACY_ROOT / session_id
+    if ld.exists() and ld.resolve() != d.resolve():
+        shutil.rmtree(ld, ignore_errors=True)
 
 def purge_empty_sessions() -> list:
     """Delete zombie session dirs where backup is just the header (≤100B) and
@@ -116,37 +153,49 @@ def purge_empty_sessions() -> list:
     purged = []
     import time
     now = time.time()
-    for p in list(ROOT.glob("*")):
-        if not p.is_dir() or p.name.startswith("__"):
+    for root in (get_sessions_root(), _LEGACY_ROOT):
+        if not root.exists():
             continue
-        md = p / "backup.md"
-        dbp = p / "backup.db"
-        try:
-            # don't delete a just-started active session (header-only but fresh)
-            try:
-                if now - p.stat().st_mtime < 3600:
-                    continue
-            except Exception:
-                pass
-            if md.exists() and md.stat().st_size > 120:
+        for p in list(root.glob("*")):
+            if not p.is_dir() or p.name.startswith("__"):
                 continue
-            if dbp.exists():
-                import sqlite3
-                db = sqlite3.connect(dbp)
+            # skip code files accidentally in sessions (shouldn't happen with new layout)
+            if p.suffix == ".py":
+                continue
+            md = p / "backup.md"
+            dbp = p / "backup.db"
+            try:
+                # don't delete a just-started active session (header-only but fresh)
                 try:
-                    cnt = db.execute("SELECT count(*) FROM chunks").fetchone()[0]
+                    if now - p.stat().st_mtime < 3600:
+                        continue
                 except Exception:
-                    cnt = 1
-                db.close()
-                if cnt != 0:
+                    pass
+                if md.exists() and md.stat().st_size > 120:
                     continue
-            # empty shell → purge
-            import shutil
-            shutil.rmtree(p, ignore_errors=True)
-            purged.append(p.name)
-        except Exception:
-            continue
+                if dbp.exists():
+                    db = sqlite3.connect(dbp)
+                    try:
+                        cnt = db.execute("SELECT count(*) FROM chunks").fetchone()[0]
+                    except Exception:
+                        cnt = 1
+                    db.close()
+                    if cnt != 0:
+                        continue
+                # empty shell → purge
+                shutil.rmtree(p, ignore_errors=True)
+                purged.append(p.name)
+            except Exception:
+                continue
     return purged
 
 def list_sessions():
-    return [p.name for p in ROOT.glob("*") if p.is_dir()]
+    # union of both locations for transition period
+    seen = set()
+    for root in (get_sessions_root(), _LEGACY_ROOT):
+        if not root.exists():
+            continue
+        for p in root.glob("*"):
+            if p.is_dir() and not p.name.startswith("__") and p.suffix != ".py":
+                seen.add(p.name)
+    return sorted(seen)

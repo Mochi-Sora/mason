@@ -7,16 +7,18 @@ Registry is the source of truth for schemas; keep both in sync.
 import json
 import pathlib
 
-from sessions.container import recall_backup as _recall, ROOT
+from sessions.container import recall_backup as _recall, get_sessions_root
 from tools.registry import registry  # noqa: E402  (registration at import time)
 
 
 def read_state(session_id: str = "default") -> str:
-    p = pathlib.Path("sessions") / session_id / "state.md"
-    # Try both CWD-relative and repo-root
-    for cand in [p, pathlib.Path(__file__).parent.parent / p]:
-        if cand.exists():
-            return cand.read_text()[:2000]
+    p = get_sessions_root() / session_id / "state.md"
+    if p.exists():
+        return p.read_text()[:2000]
+    # fallback: legacy repo location for unmigrated sessions
+    legacy = pathlib.Path(__file__).parent.parent / "sessions" / session_id / "state.md"
+    if legacy.exists():
+        return legacy.read_text()[:2000]
     return "(no state for session {})".format(session_id)
 
 
