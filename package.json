@@ -5,8 +5,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "ui-tui",
-    "ui-tui/packages/*",
+    "tui",
     "web",
     "tests-js"
   ],

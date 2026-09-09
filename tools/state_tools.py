@@ -81,7 +81,7 @@ registry.register(
 registry.register(
     name="write_state", toolset="state",
     schema={"name": "write_state",
-            "description": "Rewrite the session's tiny state.md (under 800 chars, bullets only).",
+            "description": "Rewrite the session's tiny state.md (under 2000 chars, bullets only).",
             "parameters": {"type": "object",
                            "properties": {"content": {"type": "string", "description": "Full new state.md."},
                                           "session_id": {"type": "string", "description": "Session id."}},

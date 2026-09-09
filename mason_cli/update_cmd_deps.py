@@ -595,9 +595,18 @@ def _update_node_dependencies() -> list[str]:
     # root-only. apps/desktop is deliberately never named: its Electron devDependency has a
     # ~200MB postinstall, so desktop deps install on demand (see _desktop_build_needed).
     print("→ Updating Node.js dependencies...")
+    # Mason: workspaces are tui + web (Hermes had ui-tui). Skip missing ones so
+    # `mason update` doesn't 400 when the checkout is stripped.
+    workspaces = []
+    for ws in ("tui", "web"):
+        if (_m().PROJECT_ROOT / ws / "package.json").exists():
+            workspaces.extend(["--workspace", ws])
+    if not workspaces:
+        print("  (no Node workspaces present — skipping)")
+        return []
     install_args = [
         "--no-fund", "--no-audit", "--prefer-offline", "--progress=false",
-        "--workspace", "ui-tui", "--workspace", "web",
+        *workspaces,
         # Root devDependencies (shared ESLint config) would otherwise be pruned by the
         # scoped install; apps/desktop stays excluded since it is never named above.
         "--include-workspace-root"]
@@ -613,7 +622,8 @@ def _update_node_dependencies() -> list[str]:
         npm, _m().PROJECT_ROOT, extra_args=tuple(install_args), capture_output=False, env=nixos_env)
     if result.returncode == 0:
         _record_npm_lockfile_hash(shared_mason_root)
-        print("  ✓ ui-tui, web workspaces installed (desktop skipped)")
+        ws_label = ", ".join(ws for ws in ("tui", "web") if (_m().PROJECT_ROOT / ws / "package.json").exists()) or "no workspaces"
+        print(f"  ✓ {ws_label} workspaces installed (desktop skipped)")
         return []
     print("  ⚠ npm install failed")
     stderr = (result.stderr or "").strip()

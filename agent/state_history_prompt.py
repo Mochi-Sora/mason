@@ -4,7 +4,7 @@ Teaches main model it has tiny state.md + indexed backup.md and how to recall
 STATE_HISTORY_INSTRUCTION = """
 ## Your Memory System (Custom Agent)
 
-You have tiny working memory (`state.md`, <800 chars) and a large indexed backup (`backup.md`, up to 10M chars, Gbrain-style FTS + budget packing).
+You have tiny working memory (`state.md`, <2000 chars) and a large indexed backup (`backup.md`, up to 10M chars, Gbrain-style FTS + budget packing).
 
 - **state.md** holds only what you think you need for future turns (goals, decisions, entities, open todos). Update it via `write_state` tool when something durable happens.
 - **backup.md** holds the full transcript, indexed per session folder `sessions/<session_id>/backup.md` with `backup.db` FTS. You can instantly search it.

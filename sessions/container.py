@@ -62,20 +62,25 @@ def append_backup(session_id: str, role: str, text: str):
     d = _session_dir(session_id)
     md = d / "backup.md"
     line = f"\n## {role} {datetime.datetime.utcnow().isoformat()}\n{text}\n"
-    md.write_text(md.read_text() + line)
+    # append mode, not read+write whole file (was O(n²))
+    with open(md, "a", encoding="utf-8") as f:
+        f.write(line)
     # index chunk
     cid = hashlib.sha256(line.encode()).hexdigest()[:10]
     db = _db(d)
     db.execute("INSERT OR REPLACE INTO chunks(id,text,ts) VALUES(?,?,?)", (cid, line, datetime.datetime.utcnow().isoformat()))
     db.execute("INSERT OR REPLACE INTO chunks_fts(id,text) VALUES(?,?)", (cid, line))
     db.commit(); db.close()
-    # watcher: >85% triggers summary via 1B
-    if len(md.read_text()) > BACKUP_LIMIT * BACKUP_WATCH:
-        _trigger_summary(session_id)
+    # watcher: >85% triggers summary via 1B (use stat, not read)
+    try:
+        if md.stat().st_size > BACKUP_LIMIT * BACKUP_WATCH:
+            _trigger_summary(session_id)
+    except Exception:
+        pass
 
 def update_state(session_id: str, content: str):
     d = _session_dir(session_id)
-    (d / "state.md").write_text(content[:5000])  # state is tiny by design
+    (d / "state.md").write_text(content[:2000])  # cap matches injection (system_prompt caps 2000)
 
 def recall_backup(session_id: str, query: str, budget_tokens: int = 2000, limit: int = 5) -> dict:
     """Gbrain-inspired retrieval: FTS + budget packing"""
