@@ -18,23 +18,33 @@ from agent.model_metadata import anchored_context_tokens
 from agent.prompt_caching import build_prompt_cache_plan, effective_cache_ttl
 from agent.turn_context import build_api_messages
 
-def _window_to_state_plus_last_turns(messages: list, keep_turns: int = 4) -> list:
-    """Keep system + last keep_turns user turns; older history only via recall_backup.
-    This is the 90% cut: state.md (in system) + recent window stay in context,
-    everything older lives in backup.md/FTS. Never raises; falls back to original."""
+def _window_to_state_plus_last_turns(messages: list, keep_turns: int = 0) -> list:
+    """State-only window: keep system (which already contains state.md) + the
+    current user message. Everything else — including last turns — lives only
+    in backup.md/FTS and is retrieved via recall_backup. This is the full
+    90% cut: O(1) prompt, O(T) storage. Never raises."""
     try:
-        if not messages or len(messages) <= keep_turns * 2 + 1:
+        if not messages:
             return messages
-        # find last keep_turns user indices
-        user_idxs = [i for i, m in enumerate(messages) if isinstance(m, dict) and m.get("role") == "user"]
-        if len(user_idxs) <= keep_turns:
-            return messages
-        # keep from 4th-last user onward, plus system at 0 if present
-        cutoff = user_idxs[-keep_turns]
-        # keep system if present at 0
+        # keep system at 0 if present
+        system = []
+        rest = messages
         if messages and messages[0].get("role") == "system":
-            return [messages[0]] + messages[cutoff:]
-        return messages[cutoff:]
+            system = [messages[0]]
+            rest = messages[1:]
+        if not rest:
+            return messages
+        # keep only the last user message (the current turn's prompt)
+        # find last user index in rest
+        last_user_idx = None
+        for i in range(len(rest)-1, -1, -1):
+            if isinstance(rest[i], dict) and rest[i].get("role") == "user":
+                last_user_idx = i
+                break
+        if last_user_idx is None:
+            # no user message, keep last 1
+            return system + rest[-1:]
+        return system + rest[last_user_idx:]
     except Exception:
         return messages
 
@@ -142,8 +152,8 @@ def assemble_api_request(
         ext_prefetch_cache=_ext_prefetch_cache, plugin_user_context=_plugin_user_context,
         moa_config=moa_config, active_system_prompt=active_system_prompt,
     )
-    # State history window: state.md + last 4 turns stay, older only via recall_backup
-    api_messages = _window_to_state_plus_last_turns(api_messages, keep_turns=4)
+    # State history window: state.md + current user message only — last turns live only in backup/FTS
+    api_messages = _window_to_state_plus_last_turns(api_messages, keep_turns=0)
 
     if moa_config:
         _append_moa_context(agent, api_messages, moa_config, original_user_message)
