@@ -639,6 +639,22 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
                 stable_parts.append(f"## Current State ({_sid})\n{_sc}")
     except Exception:
         pass
+    # Short-term preview — last 7-day memory so cross-session recall doesn't require a tool call
+    try:
+        from mason_constants import get_mason_home
+        _stm_dir = get_mason_home() / "short_term_memories"
+        if _stm_dir.exists():
+            _files = sorted(_stm_dir.glob("*.md"))
+            if _files:
+                _last = _files[-1]
+                _txt = _last.read_text().strip()
+                if len(_txt) > 30:
+                    # keep header + last 1500 chars (recent bullets)
+                    if len(_txt) > 1500:
+                        _txt = _txt[:1500] + "\n…"
+                    stable_parts.append(f"## Recent Memory ({_last.name})\n{_txt}")
+    except Exception:
+        pass
     # Mason cold-start tool protocol (static all session — cache-safe)
     if WORKING_SET_PROTOCOL.strip():
         stable_parts.append(WORKING_SET_PROTOCOL.strip())
