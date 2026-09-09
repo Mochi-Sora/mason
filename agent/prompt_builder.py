@@ -1528,10 +1528,16 @@ def _load_agents_md(cwd_path: Path, context_length: Optional[int] = None) -> str
                 sections.append(_context_section(content, label, label, candidate, context_length))
             break  # first name match wins per directory
     if len(sections) <= 1:
-        return sections[0] if sections else ""
+        # Mason: cap single AGENTS.md to stub (was 20K, now 2K) — full file via read_file
+        content = sections[0] if sections else ""
+        if len(content) > 2000:
+            content = content[:2000] + "\n\n…(AGENTS.md truncated to 2K — read full file via read_file if needed)"
+        return content
     # Per-file budgets applied above; also cap the merged chain so a deep monorepo can't multiply the budget.
-    return _truncate_content("\n\n".join(sections), "AGENTS.md (directory chain)", context_length=context_length,
-                             read_path=str(cwd_resolved / "AGENTS.md"))
+    merged = "\n\n".join(sections)
+    if len(merged) > 3000:
+        merged = merged[:3000] + "\n\n…(AGENTS.md chain truncated to 3K — read full files via read_file if needed)"
+    return merged
 
 
 def _load_claude_md(cwd_path: Path, context_length: Optional[int] = None) -> str:
