@@ -83,10 +83,23 @@ def _trigger_summary(session_id: str):
         prompt = build_prompt(chunk)
         summary = LlamaClient().complete(prompt, max_tokens=400)
         # replace chunk with summary
-        md.write_text(f"# Backup — {session_id} (compressed {datetime.datetime.utcnow().isoformat()})\n## Summary of oldest 30%\n{summary}\n\n" + text[int(len(text)*0.3):])
-        # rebuild index quickly (truncate FTS and reinsert)
+        new_text = f"# Backup — {session_id} (compressed {datetime.datetime.utcnow().isoformat()})\n## Summary of oldest 30%\n{summary}\n\n" + text[int(len(text)*0.3):]
+        md.write_text(new_text)
+        # rebuild both tables coherently (old code wiped FTS and left chunks stale)
         db = _db(d)
-        db.execute("DELETE FROM chunks_fts"); db.commit(); db.close()
+        db.execute("DELETE FROM chunks")
+        db.execute("DELETE FROM chunks_fts")
+        for block in new_text.split("\n## "):
+            if not block.strip() or block.lstrip().startswith("# Backup"):
+                continue
+            line = "\n## " + block
+            if len(line.strip()) < 10:
+                continue
+            cid = hashlib.sha256(line.encode()).hexdigest()[:10]
+            ts = datetime.datetime.utcnow().isoformat()
+            db.execute("INSERT OR REPLACE INTO chunks(id,text,ts) VALUES(?,?,?)", (cid, line, ts))
+            db.execute("INSERT OR REPLACE INTO chunks_fts(id,text) VALUES(?,?)", (cid, line))
+        db.commit(); db.close()
     except Exception:
         pass
 
@@ -95,6 +108,45 @@ def purge_session(session_id: str):
     d = ROOT / session_id
     if d.exists():
         shutil.rmtree(d)
+
+def purge_empty_sessions() -> list:
+    """Delete zombie session dirs where backup is just the header (≤100B) and
+    FTS is empty — the 6/7 empty shells the audit found. Called on every
+    on_session_close so Mac/VPS self-heals without manual rm. Returns purged ids."""
+    purged = []
+    import time
+    now = time.time()
+    for p in list(ROOT.glob("*")):
+        if not p.is_dir() or p.name.startswith("__"):
+            continue
+        md = p / "backup.md"
+        dbp = p / "backup.db"
+        try:
+            # don't delete a just-started active session (header-only but fresh)
+            try:
+                if now - p.stat().st_mtime < 3600:
+                    continue
+            except Exception:
+                pass
+            if md.exists() and md.stat().st_size > 120:
+                continue
+            if dbp.exists():
+                import sqlite3
+                db = sqlite3.connect(dbp)
+                try:
+                    cnt = db.execute("SELECT count(*) FROM chunks").fetchone()[0]
+                except Exception:
+                    cnt = 1
+                db.close()
+                if cnt != 0:
+                    continue
+            # empty shell → purge
+            import shutil
+            shutil.rmtree(p, ignore_errors=True)
+            purged.append(p.name)
+        except Exception:
+            continue
+    return purged
 
 def list_sessions():
     return [p.name for p in ROOT.glob("*") if p.is_dir()]

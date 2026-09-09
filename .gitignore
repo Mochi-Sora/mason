@@ -44,6 +44,7 @@ __pycache__/
 /custom_evolution/nightly/
 /custom_evolution/queue/
 /custom_evolution/patches/
-sessions/
+!sessions/*.py
+!sessions/__init__.py
 custom_evolution/evolution.log
 .bytecode-fingerprint

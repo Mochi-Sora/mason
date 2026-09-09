@@ -31,4 +31,10 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
             pass
     # 3) purge session container — no exceptions, everything deleted
     purge_session(session_id)
+    # also sweep any other empty zombies (the 6 empty shells) so they don't accumulate
+    try:
+        from .container import purge_empty_sessions
+        purge_empty_sessions()
+    except Exception:
+        pass
     return {"promoted": facts, "purged": session_id}
