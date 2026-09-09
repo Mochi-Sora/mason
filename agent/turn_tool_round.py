@@ -150,6 +150,22 @@ def run_tool_round(
             agent.stream_delta_callback(None)
 
     agent._execute_tool_calls(assistant_message, messages, effective_task_id, api_call_count)
+    # Custom Agent — mirror tool round to backup (so recall sees the work, not just bookends)
+    try:
+        from sessions.container import append_backup as _tool_backup
+        _sid = getattr(agent, "session_id", None) or effective_task_id or "default"
+        for tc in getattr(assistant_message, "tool_calls", []) or []:
+            name = getattr(getattr(tc, "function", None), "name", None) or getattr(tc, "name", "tool")
+            args = getattr(getattr(tc, "function", None), "arguments", "") or ""
+            _tool_backup(_sid, "assistant_tool", f"{name}({str(args)[:800]})")
+        # tool results are the last N tool messages appended above
+        n = len(getattr(assistant_message, "tool_calls", []) or [])
+        if n:
+            for msg in messages[-n:]:
+                if isinstance(msg, dict) and msg.get("role") == "tool":
+                    _tool_backup(_sid, "tool_result", str(msg.get("content", ""))[:800])
+    except Exception as e:
+        logger.debug("append_backup tool round failed: %s", e)
 
     if getattr(agent, "_incremental_persistence_failed", False):
         # Tool result could not be made canonical: never send the in-memory result to

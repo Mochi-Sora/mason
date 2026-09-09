@@ -12,8 +12,20 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
         d = get_sessions_root() / session_id
         backup = (d / "backup.md").read_text() if (d / "backup.md").exists() else ""
         if not backup.strip():
-            purge_session(session_id)
-            return {"promoted": []}
+            # backup empty but state.db may have real transcript — promote from there instead of dropping
+            try:
+                from mason_state import SessionDB
+                db = SessionDB()
+                msgs = db.get_messages(session_id) or []
+                if msgs:
+                    # synthesize backup from state.db transcript for promotion
+                    backup = "\n".join(f"{m.get('role','')}: {str(m.get('content',''))[:500]}" for m in msgs[-20:])
+                db.close()
+            except Exception:
+                pass
+            if not backup.strip():
+                purge_session(session_id)
+                return {"promoted": []}
         llm = LlamaClient()
         prompt = build_prompt(backup)
         raw = llm.complete(prompt, max_tokens=300)

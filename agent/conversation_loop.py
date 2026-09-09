@@ -1482,8 +1482,8 @@ def run_conversation(
     try:
         if getattr(s, "user_message", None):
             _sess_append_backup(s.effective_task_id or agent.session_id or "default", "user", str(s.user_message)[:3000])
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("append_backup user failed: %s", e)
     # Opt-in runtime: api_mode == codex_app_server hands the whole turn to the codex
     # app-server subprocess (see agent/transports/codex_app_server_session.py).
     if agent.api_mode == "codex_app_server":
@@ -1554,8 +1554,8 @@ def run_conversation(
     try:
         if result.get("final_response"):
             _sess_append_backup(s.effective_task_id or agent.session_id or "default", "assistant", str(result["final_response"])[:3000])
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("append_backup assistant failed: %s", e)
     # Avg-evo hook — per-response evolution (1B, fire-and-forget)
     try:
         if _EVO_ENABLED and result.get("final_response"):
