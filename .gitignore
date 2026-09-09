@@ -40,11 +40,11 @@ __pycache__/
 .pytest_cache/
 
 # Mason runtime artifacts (sessions, nightly output, queues)
-/sessions/
+/sessions/*
+!/sessions/*.py
+!/sessions/__init__.py
 /custom_evolution/nightly/
 /custom_evolution/queue/
 /custom_evolution/patches/
-!sessions/*.py
-!sessions/__init__.py
 custom_evolution/evolution.log
 .bytecode-fingerprint
