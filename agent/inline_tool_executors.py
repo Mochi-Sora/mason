@@ -133,6 +133,14 @@ def _memory(agent, args: dict, ctx: InlineToolContext) -> Any:
     return result
 
 
+def _state_current_session_id(agent, ctx: InlineToolContext) -> str:
+    """The session an agent-level state call serves: same keying chain as
+    ``append_backup`` in the conversation loop (effective task id → agent
+    session id → "default"), so recall/state reads target the container this
+    turn's transcript is actually written to."""
+    return ctx.effective_task_id or getattr(agent, "session_id", "") or "default"
+
+
 _read_preview = _callback_tool(
     "tools.read_preview_tool", "read_preview_tool", "read_preview_callback",
     ("start", "start"), ("count", "count"),
@@ -196,14 +204,21 @@ INLINE_TOOL_EXECUTORS: Dict[str, InlineToolExecutor] = {
         ("server", "server", ""), ("action", "action", "install"), ("reason", "reason", ""),
     ),
         "delegate_task": lambda agent, args, ctx: agent._dispatch_delegate_task(args),
+    # Agent-level state tools act on the session this agent serves (mirroring
+    # append_backup's keying). An explicit session_id arg still wins so the model
+    # can read/recall another container (e.g. a delegated sub-session).
     "read_state": _tool(
-        "tools.state_tools", "read_state", ("session_id", "session_id", "default"),
+        "tools.state_tools", "read_state", ("session_id", "session_id"),
+        current_session_id=lambda agent, ctx: _state_current_session_id(agent, ctx),
     ),
     "write_state": _tool(
-        "tools.state_tools", "write_state", ("content", "content", ""), ("session_id", "session_id", "default"),
+        "tools.state_tools", "write_state", ("content", "content", ""), ("session_id", "session_id"),
+        current_session_id=lambda agent, ctx: _state_current_session_id(agent, ctx),
     ),
     "recall_backup": _tool(
-        "tools.state_tools", "recall_backup", ("query", "query", ""), ("session_id", "session_id", "default"), ("budget_tokens", "budget_tokens", 2000), ("limit", "limit", 5),
+        "tools.state_tools", "recall_backup", ("query", "query", ""), ("session_id", "session_id"),
+        ("budget_tokens", "budget_tokens", 2000), ("limit", "limit", 5),
+        current_session_id=lambda agent, ctx: _state_current_session_id(agent, ctx),
     ),
 
 }
