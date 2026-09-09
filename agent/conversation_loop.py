@@ -1422,12 +1422,6 @@ def run_conversation(
             user_message, persist_user_message
         )
 
-    # Custom Agent — per-session backup (indexed, 10M, purge on close)
-    try:
-        if s.user_message:
-            _sess_append_backup(s.effective_task_id or agent.session_id or "default", "user", str(s.user_message)[:3000])
-    except Exception:
-        pass
     # The gateway caches agents across turns; compression state is per-turn, or a stale
     # in-place boundary would make a later uncompressed result look compacted.
     agent._last_compaction_in_place = agent._last_compression_attempt_recorded = False
@@ -1483,6 +1477,13 @@ def run_conversation(
         max_compression_attempts=getattr(agent, "max_compression_attempts", 3),
         **{f.name: getattr(_ctx, f.name.lstrip("_")) for f in fields(_LoopState) if f.name in _CTX_FIELDS},
     )
+    # Custom Agent — per-session backup (indexed, 10M, purge on close): wire user turn
+    # into backup.md/FTS. This was dead (NameError on `s` before it existed) — now here.
+    try:
+        if getattr(s, "user_message", None):
+            _sess_append_backup(s.effective_task_id or agent.session_id or "default", "user", str(s.user_message)[:3000])
+    except Exception:
+        pass
     # Opt-in runtime: api_mode == codex_app_server hands the whole turn to the codex
     # app-server subprocess (see agent/transports/codex_app_server_session.py).
     if agent.api_mode == "codex_app_server":
@@ -1548,6 +1549,13 @@ def run_conversation(
         # Reuse the gateway's context-recovery contract: transcript stays intact while
         # future input can move to a clean session (#98722).
         result.update(error=_COMPRESSION_TIMEOUT_FINAL_RESPONSE, partial=True, compression_exhausted=True)
+    # Custom Agent — complete the backup: assistant turn into backup.md/FTS (user was
+    # wired at turn start; without this the backup is half-empty)
+    try:
+        if result.get("final_response"):
+            _sess_append_backup(s.effective_task_id or agent.session_id or "default", "assistant", str(result["final_response"])[:3000])
+    except Exception:
+        pass
     # Avg-evo hook — per-response evolution (1B, fire-and-forget)
     try:
         if _EVO_ENABLED and result.get("final_response"):
