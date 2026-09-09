@@ -9,10 +9,29 @@ DIR_NAME = "long_term_memories"
 FACTS_FILE = "facts.jsonl"
 EDGES_FILE = "edges.jsonl"
 DB_FILE = "long_term.db"
+_LEGACY_DIR_NAME = DIR_NAME
 
-def _base(base: pathlib.Path) -> pathlib.Path:
-    d = base / DIR_NAME
+def _base(base: pathlib.Path | None = None) -> pathlib.Path:
+    try:
+        from mason_constants import get_mason_home
+        d = get_mason_home() / DIR_NAME
+    except Exception:
+        d = (base or pathlib.Path(__file__).parent.parent.parent) / DIR_NAME
     d.mkdir(parents=True, exist_ok=True)
+    # one-time migration from legacy repo location
+    try:
+        legacy = pathlib.Path(__file__).parent.parent.parent / _LEGACY_DIR_NAME
+        if legacy.exists() and legacy.resolve() != d.resolve():
+            for child in list(legacy.iterdir()):
+                dest = d / child.name
+                if not dest.exists():
+                    import shutil
+                    if child.is_dir():
+                        shutil.copytree(child, dest, dirs_exist_ok=True)
+                    else:
+                        shutil.move(str(child), str(dest))
+    except Exception:
+        pass
     return d
 
 def _db(base: pathlib.Path) -> sqlite3.Connection:

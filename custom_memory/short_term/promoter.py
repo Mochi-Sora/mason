@@ -20,7 +20,13 @@ def evaluate(content: str, filename: str, llm_client=None) -> dict:
     return {"promote": False, "facts": [], "reason": "no JSON"}
 
 def promote_file(base: pathlib.Path, filename: str, long_term_store, llm_client=None):
-    p = base / "short_term_memories" / filename
+    try:
+        from mason_constants import get_mason_home
+        p = get_mason_home() / "short_term_memories" / filename
+        if not p.exists():
+            p = base / "short_term_memories" / filename
+    except Exception:
+        p = base / "short_term_memories" / filename
     if not p.exists():
         return {"promote": False, "reason": "file not found"}
     content = p.read_text()

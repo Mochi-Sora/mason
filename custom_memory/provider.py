@@ -11,7 +11,11 @@ from .llm.client import LlamaClient
 class CustomMemoryProvider:
     """Implements minimal MemoryProvider interface used by Mason"""
     def __init__(self, base: pathlib.Path | None = None):
-        self.base = pathlib.Path(base) if base else pathlib.Path(__file__).parent.parent
+        try:
+            from mason_constants import get_mason_home
+            self.base = get_mason_home()
+        except Exception:
+            self.base = pathlib.Path(base) if base else pathlib.Path(__file__).parent.parent
         self.llm = LlamaClient()
 
     # short-term is default remember path
