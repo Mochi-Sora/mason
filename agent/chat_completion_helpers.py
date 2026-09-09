@@ -1566,7 +1566,28 @@ def _dedupe_tool_schemas(tools_for_api):
         return tools_for_api
 
 
+def _sanitize_message_content_types(messages: list) -> None:
+    """Coerce every message content to string or list in-place so strict
+    OpenAI-compatible deserializers (DeepSeek) don't 400 on object/number
+    content. Tool results that returned a dict/number get json dumps."""
+    if not messages:
+        return
+    for m in messages:
+        if not isinstance(m, dict):
+            continue
+        c = m.get("content")
+        if c is None or isinstance(c, (str, list)):
+            continue
+        try:
+            import json as _js
+            m["content"] = _js.dumps(c, ensure_ascii=False) if isinstance(c, (dict, list)) else str(c)
+        except Exception:
+            m["content"] = str(c)
+
+
 def _build_api_kwargs_for_mode(agent, api_messages: list, tools_for_api: list | None = None) -> dict:
+    # Coerce stray object/number content to string so strict deserializers don't 400
+    _sanitize_message_content_types(api_messages)
     # One-shot continuation override — consumed exactly once, on the FIRST
     # request this call builds (only one api_mode branch runs per invocation).
     reasoning_config = _reasoning_config_for_wire(agent)
