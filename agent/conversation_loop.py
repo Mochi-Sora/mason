@@ -310,6 +310,13 @@ def _apply_active_turn_redirect(agent: Any, messages: List[Dict[str, Any]], text
         append_message(messages, placeholder)
     # Transcript shows the user's own words; the provider replays the scaffolded form.
     append_message(messages, {"role": "user", "content": text, "api_content": correction})
+    # Mirror steering to backup so mid-turn corrections aren't lost (was gap #2)
+    try:
+        from sessions.container import append_backup as _steer_backup
+        _sid = getattr(agent, "session_id", None) or getattr(agent, "_gateway_session_key", None) or "default"
+        _steer_backup(_sid, "user", text[:2000])
+    except Exception as e:
+        logger.debug("steering backup failed: %s", e)
 
     # Stateful scrubber for <memory-context> spans split across stream deltas (#5719).  sanitize_context()
     # alone can't survive chunk boundaries because the block regex needs both tags in one string.

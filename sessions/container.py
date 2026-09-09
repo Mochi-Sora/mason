@@ -65,6 +65,12 @@ def append_backup(session_id: str, role: str, text: str):
     # append mode, not read+write whole file (was O(n²))
     with open(md, "a", encoding="utf-8") as f:
         f.write(line)
+        try:
+            f.flush()
+            import os
+            os.fsync(f.fileno())
+        except Exception:
+            pass
     # index chunk
     cid = hashlib.sha256(line.encode()).hexdigest()[:10]
     db = _db(d)

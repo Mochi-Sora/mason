@@ -157,13 +157,20 @@ def run_tool_round(
         for tc in getattr(assistant_message, "tool_calls", []) or []:
             name = getattr(getattr(tc, "function", None), "name", None) or getattr(tc, "name", "tool")
             args = getattr(getattr(tc, "function", None), "arguments", "") or ""
-            _tool_backup(_sid, "assistant_tool", f"{name}({str(args)[:800]})")
+            truncated = str(args)[:2000]
+            if len(str(args)) > 2000:
+                truncated += " …(truncated)"
+            _tool_backup(_sid, "assistant_tool", f"{name}({truncated})")
         # tool results are the last N tool messages appended above
         n = len(getattr(assistant_message, "tool_calls", []) or [])
         if n:
             for msg in messages[-n:]:
                 if isinstance(msg, dict) and msg.get("role") == "tool":
-                    _tool_backup(_sid, "tool_result", str(msg.get("content", ""))[:800])
+                    content = str(msg.get("content", ""))
+                    truncated = content[:2000]
+                    if len(content) > 2000:
+                        truncated += "\n…(truncated)"
+                    _tool_backup(_sid, "tool_result", truncated)
     except Exception as e:
         logger.debug("append_backup tool round failed: %s", e)
 
