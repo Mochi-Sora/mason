@@ -36,7 +36,6 @@ _MASON_CORE_TOOLS = [
     "kanban_unblock",
     "kanban_attach", "kanban_attach_url", "kanban_attachments",
     "computer_use",
-    "read_state", "write_state", "recall_backup",
 ]
 
 # Webhook payloads are untrusted third-party content: no file/system execution.
@@ -67,7 +66,7 @@ def _core_without(*excluded, kanban=True):
 # Coding posture: everything you reach for while pairing on code; drops messaging,
 # tts, image_gen, home-assistant, cron, kanban and computer-use.
 _CODING_TOOLS = _core_without("image_generate", "text_to_speech", "cronjob_manage", "computer_use",
-    "read_state", "write_state", "recall_backup", *_HA_TOOLS, kanban=False)
+    *_HA_TOOLS, kanban=False)
 
 # Core toolset definitions: individual tools or references to other toolsets.
 TOOLSETS = {

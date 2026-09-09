@@ -34,6 +34,14 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
         facts = json.loads(m.group(0)) if m else []
     except Exception:
         facts = []
+    _backup_for_fallback = locals().get("backup", "")
+    if not facts and isinstance(_backup_for_fallback, str) and _backup_for_fallback.strip():
+        # LLM dormant (no server/GGUF) or returned no JSON — heuristic so close still promotes
+        try:
+            from custom_memory.short_term.manager import _extract_facts_mem0
+            facts = _extract_facts_mem0(_backup_for_fallback, llm_client=None)
+        except Exception:
+            facts = []
     # 2) promote to short-term (intact)
     from custom_memory.short_term.manager import remember as st_remember
     for f in facts[:5]:
