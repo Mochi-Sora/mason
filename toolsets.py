@@ -22,6 +22,7 @@ _MASON_CORE_TOOLS = [
     "text_to_speech",
     "todo_list", "memory",
     "session_search",
+    "read_state", "write_state", "recall_backup",
     "clarify",
     "execute_code", "delegate_task",
     "cronjob_manage",

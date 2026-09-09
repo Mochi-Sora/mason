@@ -18,6 +18,26 @@ from agent.model_metadata import anchored_context_tokens
 from agent.prompt_caching import build_prompt_cache_plan, effective_cache_ttl
 from agent.turn_context import build_api_messages
 
+def _window_to_state_plus_last_turns(messages: list, keep_turns: int = 4) -> list:
+    """Keep system + last keep_turns user turns; older history only via recall_backup.
+    This is the 90% cut: state.md (in system) + recent window stay in context,
+    everything older lives in backup.md/FTS. Never raises; falls back to original."""
+    try:
+        if not messages or len(messages) <= keep_turns * 2 + 1:
+            return messages
+        # find last keep_turns user indices
+        user_idxs = [i for i, m in enumerate(messages) if isinstance(m, dict) and m.get("role") == "user"]
+        if len(user_idxs) <= keep_turns:
+            return messages
+        # keep from 4th-last user onward, plus system at 0 if present
+        cutoff = user_idxs[-keep_turns]
+        # keep system if present at 0
+        if messages and messages[0].get("role") == "system":
+            return [messages[0]] + messages[cutoff:]
+        return messages[cutoff:]
+    except Exception:
+        return messages
+
 logger = logging.getLogger("agent.conversation_loop")
 
 
@@ -122,6 +142,8 @@ def assemble_api_request(
         ext_prefetch_cache=_ext_prefetch_cache, plugin_user_context=_plugin_user_context,
         moa_config=moa_config, active_system_prompt=active_system_prompt,
     )
+    # State history window: state.md + last 4 turns stay, older only via recall_backup
+    api_messages = _window_to_state_plus_last_turns(api_messages, keep_turns=4)
 
     if moa_config:
         _append_moa_context(agent, api_messages, moa_config, original_user_message)
