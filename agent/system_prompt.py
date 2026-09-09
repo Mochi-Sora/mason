@@ -627,6 +627,18 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     # Custom Agent — State History (per-session tiny state + indexed backup, injected into stable for cache warmth)
     if STATE_HISTORY_INSTRUCTION.strip():
         stable_parts.append(STATE_HISTORY_INSTRUCTION.strip())
+    # Auto-inject current state.md content (tiny, <800 chars) so model doesn't need to
+    # call read_state every turn to know the working memory — this is the actual 90% cut.
+    try:
+        from sessions.container import ROOT as _sess_root
+        _sid = getattr(agent, "session_id", None) or "default"
+        _sp = _sess_root / _sid / "state.md"
+        if _sp.exists():
+            _sc = _sp.read_text().strip()[:2000]
+            if _sc:
+                stable_parts.append(f"## Current State ({_sid})\n{_sc}")
+    except Exception:
+        pass
     # Mason cold-start tool protocol (static all session — cache-safe)
     if WORKING_SET_PROTOCOL.strip():
         stable_parts.append(WORKING_SET_PROTOCOL.strip())

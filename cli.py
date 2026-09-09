@@ -3990,6 +3990,13 @@ class MasonCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin, CLITuiMixi
                 self._session_db.end_session(self.agent.session_id, "cli_close")
             except (Exception, KeyboardInterrupt) as e:
                 logger.debug("Could not close session in DB: %s", e)
+            # Custom Agent — promote backup → short-term then purge session container
+            # (was TUI-only; now every close path does it)
+            try:
+                from sessions.manager import on_session_close
+                on_session_close(self.agent.session_id)
+            except Exception as e:
+                logger.debug("on_session_close failed: %s", e)
             if not self._delete_session_on_exit:
                 # Drop the empty row of a start-and-quit session so /resume stays clean.
                 try:

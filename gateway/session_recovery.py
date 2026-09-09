@@ -260,6 +260,11 @@ class SessionRecoveryMixin:
                 promote(session_id, reason)
             else:
                 db.end_session(session_id, reason)
+            try:
+                from sessions.manager import on_session_close
+                on_session_close(session_id)
+            except Exception:
+                pass
         except Exception as exc:
             log(exc)
 
