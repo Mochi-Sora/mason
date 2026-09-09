@@ -35,9 +35,27 @@ def _extract_facts_mem0(text: str, llm_client=None) -> list[str]:
     Falls back to heuristic if 1B unavailable.
     """
     if llm_client is None:
-        # heuristic: split on sentences, keep meaningful ones
-        parts = [p.strip() for p in text.replace("—"," ").split(".") if len(p.strip())>12]
-        return parts[:3] if parts else [text.strip()]
+        # heuristic: strip backup headers/timestamps/empty markers, keep real sentences
+        cleaned = []
+        for line in text.splitlines():
+            line=line.strip()
+            if not line or line.startswith("# Backup") or line.startswith("## "): 
+                continue
+            if line.startswith("- "): line=line[2:]
+            # strip leading timestamp like "13:36 UTC — "
+            import re as _re
+            line=_re.sub(r"^\d{1,2}:\d{2} UTC —\s*", "", line)
+            line=_re.sub(r"^\d{4}-\d{2}-\d{2}.*?:\s*", "", line)
+            if len(line)>30 and any(c.isalpha() for c in line) and "8259" not in line:
+                cleaned.append(line)
+        # split remaining on sentences
+        parts=[]
+        for c in cleaned:
+            for p in c.replace("—"," ").split("."):
+                p=p.strip()
+                if len(p)>30 and len(p.split())>4:
+                    parts.append(p)
+        return parts[:3] if parts else [c for c in cleaned[:1] if len(c)>20]
     from custom_memory.llm.tasks.extract_task import build_prompt as extract_prompt
     prompt = extract_prompt(text)
     try:
@@ -78,19 +96,19 @@ def _sanitize_bullet(text: str) -> str:
     return text
 
 def remember(base: pathlib.Path, text: str, date: str | None = None, llm_client=None) -> pathlib.Path:
-    # mem0-inspired: extract then dedup, but still store as clean bullet (3000 char, 7-file cap preserved)
+    # mem0-inspired: extract then dedup — skip write entirely if duplicate
     facts = _extract_facts_mem0(text, llm_client)
-    # write primary bullet (original) plus dedup check
     d = _dir(base)
-    date = date or _today()
-    p = d / f"{date}.md"
-    bullet = _sanitize_bullet(text)
-    # mem0 dedup: skip vector indexing if duplicate, but keep .md append for human readability
-    is_dup = False
+    # dedup: if any extracted fact already exists, skip this remember
     for _f in facts:
         if _dedup_check(base, _f):
-            is_dup = True
-            break
+            # return existing file without appending
+            return d / f"{date or _today()}.md"
+    date = date or _today()
+    p = d / f"{date}.md"
+    # use first clean fact as bullet, not raw transcript
+    bullet_text = facts[0] if facts else text
+    bullet = _sanitize_bullet(bullet_text)
     header = f"# {date}\n"
     existing = p.read_text() if p.exists() else header
     if not existing.startswith("#"):

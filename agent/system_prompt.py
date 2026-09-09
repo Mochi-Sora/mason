@@ -648,7 +648,11 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
             if _files:
                 _last = _files[-1]
                 _txt = _last.read_text().strip()
-                if len(_txt) > 30:
+                # skip garbage: raw backup headers or ID fragments from old heuristic
+                if "# Backup" in _txt or _txt.count("8259") > 1 or _txt.count("## assistant_tool") > 2:
+                    # garbage from pre-fix promotion — skip until next clean close overwrites it
+                    pass
+                elif len(_txt) > 30:
                     # keep header + last 1500 chars (recent bullets)
                     if len(_txt) > 1500:
                         _txt = _txt[:1500] + "\n…"
