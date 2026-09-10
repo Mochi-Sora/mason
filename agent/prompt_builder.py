@@ -1275,52 +1275,24 @@ def _render_skills_index(
     skills_by_category: dict[str, list[tuple[str, str]]], category_descriptions: dict[str, str],
     compact_categories: "frozenset[str] | None", available_tools: "set[str] | None",
 ) -> str:
-    """Render the ## Skills block; "" when there is nothing to list."""
+    """Render the ## Skills block; "" when there is nothing to list — now lazy."""
     if not skills_by_category:
         return ""
-    # Demoted categories collapse to one names-only line. NEVER drop entries — agent-created skills are the
-    # model's project memory and it won't rediscover them via skills_list. Nested categories follow their parent.
-    demoted = frozenset(cat for cat in skills_by_category if cat.split("/", 1)[0] in (compact_categories or frozenset()))
-    hidden_note = (
-        "\n(Categories marked [names only] are outside the current coding "
-        "context, so their descriptions are omitted — the skills work "
-        "normally and load with skill_view(name) as usual.)"
-    ) if demoted else ""
-    # Don't name web_search when the session has no web tools (dangling reference).
+    # Mason lazy: don't inline descriptions — just counts + names, full loads via skill_view
+    total = sum(len(v) for v in skills_by_category.values())
+    cats = sorted(skills_by_category.keys())
+    # names-only stub: ~200B instead of 3-5K
+    names_preview = ", ".join(sorted({n for entries in skills_by_category.values() for n, _ in entries})[:12])
+    more = f" +{total-12} more" if total > 12 else ""
     _basic_tools = "terminal" if available_tools is not None and "web_search" not in available_tools else "web_search or terminal"
-    index_lines = []
-    for category in sorted(skills_by_category):
-        entries = skills_by_category[category]
-        if category in demoted:
-            index_lines.append(f"  {category} [names only]: {', '.join(sorted({n for n, _ in entries}))}")
-            continue
-        cat_desc = category_descriptions.get(category, "")
-        index_lines.append(f"  {category}: {cat_desc}" if cat_desc else f"  {category}:")
-        seen = set()
-        for name, desc in sorted(entries, key=lambda x: x[0]):  # stable: first entry per name wins
-            if name not in seen:
-                seen.add(name)
-                index_lines.append(f"    - {name}: {desc}" if desc else f"    - {name}")
     return (
-        "## Skills\n"
-        "Before replying, scan the skills below. If a skill matches or is even partially relevant to your "
-        "task, you MUST load it with skill_view(name) and follow its instructions. Err on the side of "
-        "loading — it is always better to have context you don't need than to miss critical steps, pitfalls, "
-        "or established workflows. Skills contain specialized knowledge — API endpoints, tool-specific "
-        "commands, and proven workflows that outperform general-purpose approaches. Load the skill "
-        f"even if you think you could handle the task with basic tools like {_basic_tools}. "
-        "Skills also encode the user's preferred approach, conventions, and quality standards for tasks like "
-        "code review, planning, and testing — load them even for tasks you already know how to do, because "
-        "the skill defines how it should be done here.\n"
-        "If a skill has issues, fix it with skill_manage(action='patch').\n"
-        "After difficult/iterative tasks, offer to save as a skill. If a skill you loaded was missing steps, "
-        "had wrong commands, or needed pitfalls you discovered, update it before finishing.\n"
-        "\n"
-        "<available_skills>\n"
-        + "\n".join(index_lines) + "\n"
-        "</available_skills>\n\n"
-        "Only proceed without loading a skill if genuinely none are relevant to the task."
-        + hidden_note
+        "## Skills (lazy)\n"
+        + f"{total} skills available across {len(cats)} categories: " + ", ".join(cats) + ". "
+        + f"Preview: {names_preview}{more}.\n"
+        + "Skills are lazy-loaded — call `skills_list` to list all, or `skill_view(name)` to load full instructions. "
+        + "If a skill matches or is even partially relevant to your task, you MUST load it with skill_view(name). "
+        + f"Skills contain specialized workflows that outperform basic tools like {_basic_tools}. "
+        + "Only proceed without loading a skill if genuinely none are relevant.\n"
     )
 
 
