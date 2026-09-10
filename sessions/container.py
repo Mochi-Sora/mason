@@ -88,6 +88,45 @@ def update_state(session_id: str, content: str):
     d = _session_dir(session_id)
     (d / "state.md").write_text(content[:2000])  # cap matches injection (system_prompt caps 2000)
 
+def append_state_bullet(session_id: str, bullet: str):
+    """Auto-distill: append `tool → outcome` bullet to state.md, capped 2000 chars, keep newest."""
+    try:
+        d = _session_dir(session_id)
+        p_state = d / "state.md"
+        existing = p_state.read_text() if p_state.exists() else f"# State — {session_id}\n"
+        if not existing.strip():
+            existing = f"# State — {session_id}\n"
+        bullet = bullet.strip()
+        if not bullet.startswith("-"):
+            bullet = "- " + bullet
+        # timestamp if missing
+        import re as _re, datetime as _dt
+        if not _re.match(r"^- \d{2}:\d{2}", bullet):
+            now = _dt.datetime.utcnow().strftime("%H:%M UTC — ")
+            bullet = bullet.replace("- ", f"- {now}", 1)
+        if not existing.endswith("\n"):
+            existing += "\n"
+        existing += bullet + "\n"
+        # cap 2000: keep header + newest bullets (same as short_term)
+        if len(existing) > 2000:
+            lines = existing.splitlines()
+            header = lines[0] if lines and lines[0].startswith("#") else f"# State — {session_id}"
+            bullets = [l for l in lines[1:] if l.strip()]
+            kept = []
+            cur = header + "\n"
+            for b in reversed(bullets):
+                if len(cur) + len(b) + 1 <= 2000:
+                    kept.append(b)
+                else:
+                    break
+            kept.reverse()
+            existing = header + "\n" + "\n".join(kept) + "\n"
+            if len(existing) > 2000:
+                existing = existing[:1990] + "\n…\n"
+        p_state.write_text(existing)
+    except Exception:
+        pass
+
 def recall_backup(session_id: str, query: str, budget_tokens: int = 2000, limit: int = 5) -> dict:
     """Gbrain-inspired retrieval: FTS + budget packing"""
     d = get_sessions_root() / session_id

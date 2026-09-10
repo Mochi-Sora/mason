@@ -151,8 +151,9 @@ def run_tool_round(
 
     agent._execute_tool_calls(assistant_message, messages, effective_task_id, api_call_count)
     # Custom Agent — mirror tool round to backup (so recall sees the work, not just bookends)
+    # + auto-distill state: tool → outcome bullet so state stays fresh even if model forgets write_state
     try:
-        from sessions.container import append_backup as _tool_backup
+        from sessions.container import append_backup as _tool_backup, append_state_bullet as _state_bullet
         _sid = getattr(agent, "session_id", None) or effective_task_id or "default"
         for tc in getattr(assistant_message, "tool_calls", []) or []:
             name = getattr(getattr(tc, "function", None), "name", None) or getattr(tc, "name", "tool")
@@ -162,15 +163,44 @@ def run_tool_round(
                 truncated += " …(truncated)"
             _tool_backup(_sid, "assistant_tool", f"{name}({truncated})")
         # tool results are the last N tool messages appended above
+        # collect for both backup and state distill
+        _tool_results = []
         n = len(getattr(assistant_message, "tool_calls", []) or [])
         if n:
             for msg in messages[-n:]:
                 if isinstance(msg, dict) and msg.get("role") == "tool":
                     content = str(msg.get("content", ""))
+                    _tool_results.append(content)
                     truncated = content[:2000]
                     if len(content) > 2000:
                         truncated += "\n…(truncated)"
                     _tool_backup(_sid, "tool_result", truncated)
+        # auto-distill: one bullet per tool call → state.md (tiny, newest-kept, 2000 cap)
+        try:
+            for idx, tc in enumerate(getattr(assistant_message, "tool_calls", []) or []):
+                name = getattr(getattr(tc, "function", None), "name", None) or getattr(tc, "name", "tool")
+                args = getattr(getattr(tc, "function", None), "arguments", "") or ""
+                # keep args preview short for state (80 chars)
+                ap = str(args).replace("\n"," ").strip()[:80]
+                if len(str(args)) > 80:
+                    ap += "…"
+                outcome = _tool_results[idx] if idx < len(_tool_results) else ""
+                # outcome preview: first non-empty line, 100 chars
+                preview = ""
+                for line in outcome.splitlines():
+                    line=line.strip()
+                    if line:
+                        preview = line[:100]
+                        break
+                if not preview:
+                    preview = outcome.strip()[:100] or "done"
+                # skip noisy housekeeping
+                if name in ("memory","todo_list","skill_manage","session_search"):
+                    continue
+                bullet = f"{name}({ap}) → {preview}"
+                _state_bullet(_sid, bullet)
+        except Exception as _e2:
+            logger.debug("append_state_bullet failed: %s", _e2)
     except Exception as e:
         logger.debug("append_backup tool round failed: %s", e)
 
