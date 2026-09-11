@@ -1,9 +1,9 @@
 ## Mason one-line installer — Native Windows (PowerShell)
-# Usage: irm https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.ps1 | iex
+# Usage: irm https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install.ps1 | iex
 # What it does: uv + Python 3.11 + Mason + 400MB Qwen2-0.5B — one line, no admin, no manual llama-server.
 
 $ErrorActionPreference = "Stop"
-$Repo = "Mochi-Sora/mason"
+$Repo = "Mochi-Sora/Mason-Agent"
 $MasonHome = if ($env:MASON_HOME) { $env:MASON_HOME } else { Join-Path $env:LOCALAPPDATA "mason" }
 
 function Info($m) { Write-Host "→ $m" -ForegroundColor Cyan }

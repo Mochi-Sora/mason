@@ -297,7 +297,7 @@ def _beta_header(betas: list) -> Dict[str, str]:
 def _attribution_headers() -> Dict[str, str]:
     """Same client-attribution set sent to OpenRouter / Vercel AI Gateway / Fireworks."""
     return {
-        "HTTP-Referer": "https://github.com/Mochi-Sora/mason", "X-Title": "Mason Agent",
+        "HTTP-Referer": "https://github.com/Mochi-Sora/Mason-Agent", "X-Title": "Mason Agent",
         "User-Agent": f"MasonAgent/{_MASON_VERSION}",
     }
 

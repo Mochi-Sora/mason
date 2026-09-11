@@ -130,7 +130,7 @@ _UPDATE_CHECK_CACHE_SECONDS = 6 * 3600  # avoid repeated git fetches
 # Returned when an update is known to exist but commits can't be counted (e.g. nix builds).
 UPDATE_AVAILABLE_NO_COUNT = -1
 
-_UPSTREAM_REPO_URL = "https://github.com/Mochi-Sora/mason.git"
+_UPSTREAM_REPO_URL = "https://github.com/Mochi-Sora/Mason-Agent.git"
 _OFFICIAL_REPO_CANONICAL = "github.com/mochi-sora/mason"
 
 
@@ -401,13 +401,13 @@ def _compute_git_banner_state(repo_dir: Optional[Path] = None) -> Optional[dict]
     return {"upstream": upstream, "local": local, "ahead": max(ahead, 0)}
 
 
-_RELEASE_URL_BASE = "https://github.com/Mochi-Sora/mason/releases/tag"
+_RELEASE_URL_BASE = "https://github.com/Mochi-Sora/Mason-Agent/releases/tag"
 
 
 def get_latest_release_tag(repo_dir: Optional[Path] = None) -> Optional[tuple]:
     """Return ``(tag, release_url)`` for the latest local git tag, or None (a miss is cached too).
 
-    Release URL always points at the canonical Mochi-Sora/mason repo.
+    Release URL always points at the canonical Mochi-Sora/Mason-Agent repo.
     """
     def _compute():
         rd = repo_dir or _resolve_repo_dir()

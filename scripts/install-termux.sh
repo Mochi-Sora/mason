@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
 # Mason one-line installer — Android / Termux
-# Usage: curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install-termux.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install-termux.sh | sh
 # What it does: pkg deps + uv + Python 3.11 + Mason (termux extra) + 400MB 0.5B — one line.
 
 set -eu
 
-REPO="Mochi-Sora/mason"
+REPO="Mochi-Sora/Mason-Agent"
 
 echo "→ Termux detected — installing Mason (termux extra, 400MB model)..."
 # Termux pkg deps (no sudo)

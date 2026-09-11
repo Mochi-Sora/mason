@@ -26,19 +26,19 @@ Use any model you want — OpenRouter, OpenAI, your own endpoint, and many other
 
 ### Linux, macOS, WSL2
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install.sh | sh
 # then: mason
 ```
 
 ### Windows (native, PowerShell)
 ```powershell
-irm https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install.ps1 | iex
 # then: mason
 ```
 
 ### Android / Termux
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install-termux.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install-termux.sh | sh
 ```
 
 One line does everything: `uv` + Python 3.11 + Mason + 400MB Qwen2-0.5B (`llama-server` :8080) + `~/.mason/config.yaml` + smoke test. First run downloads the model (one-time, resumable) — wait a minute, then `mason` to chat. No API keys needed — local 0.5B handles memory/evolution for free.
@@ -46,7 +46,7 @@ One line does everything: `uv` + Python 3.11 + Mason + 400MB Qwen2-0.5B (`llama-
 <details><summary>Manual / dev install (git clone)</summary>
 
 ```bash
-git clone https://github.com/Mochi-Sora/mason.git && cd mason
+git clone https://github.com/Mochi-Sora/Mason-Agent.git && cd mason
 python -m venv .venv && source .venv/bin/activate
 pip install -e "."
 mason onboard --yes      # same 400MB fetch + config

@@ -1,10 +1,10 @@
 #!/usr/bin/env sh
 # Mason one-line installer — Linux / macOS / WSL2
-# Usage: curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install.sh | sh
 # What it does: uv + Python 3.11 + Mason + 400MB Qwen2-0.5B (llama-server :8080) — one line, no extra steps.
 set -eu
 
-REPO="Mochi-Sora/mason"
+REPO="Mochi-Sora/Mason-Agent"
 MASON_HOME="${MASON_HOME:-$HOME/.mason}"
 
 info() { printf "\033[1;34m→ %s\033[0m\n" "$*"; }
