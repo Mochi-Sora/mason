@@ -3,20 +3,21 @@
 </p>
 
 # Mason ◈
-> Detached fork of [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research (MIT) — rebranded, stripped to core, and rebuilt with custom memory (mem0 short-term + Gbrain-style long-term), per-session state history, and nightly self-evolution. Maintained by [Mochi Sora](https://github.com/Mochi-Sora).
+> Detached fork of [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research (MIT) — rebranded, stripped to core, and rebuilt for **efficiency first**: state-first O(1) prompts, lazy everything, and a tiny local 0.5B for grunt work. Powerful and all-round (35 built-in skills, 25 more on demand), yet fast and cheap enough for a $5 VPS. Maintained by [Mochi Sora](https://github.com/Mochi-Sora).
 
-**The self-improving AI agent, state-first edition.** It creates skills from experience, improves them during use, keeps a tiny per-session state (90% context cut) with an indexed backup it can search instantly, and runs a nightly evolution sweep. Run it on a $5 VPS, a GPU cluster, or serverless infrastructure that costs nearly nothing when idle. Talk to it from Telegram while it works on a cloud VM.
+**The efficient, fast and cheap — yet powerful, all-round — self-improving agent.** State-first O(1) prompts (17 KB vs 60 KB: only `state.md` + current turn in context, 10 MB indexed backup on demand), lazy AGENTS.md (30 KB→2 KB stub) + lazy skills (35 built-in, 25 optional on demand) + lazy tools (89% cache hit), and a tiny 0.5B local LLM (llama.cpp :8080) for memory, evolution and grunt work. Cheap on a $5 VPS, powerful across code/docs/research/media. Talk to it from Telegram while it works on a cloud VM.
 
 Use any model you want — OpenRouter, OpenAI, your own endpoint, and many others. Switch with `mason model` — no code changes, no lock-in.
 
 <table>
-<tr><td><b>A state-first terminal UI</b></td><td>Minimal Ink TUI showing the tiny state.md, backup stats and short-term health, with live chat wired through tui/bridge.py into the real agent loop (/recall, /state, /close).</td></tr>
-<tr><td><b>Lives where you do</b></td><td>Telegram, Discord, Slack, WhatsApp, Signal, and CLI — all from a single gateway process. Voice memo transcription, cross-platform conversation continuity.</td></tr>
-<tr><td><b>A closed learning loop</b></td><td>Agent-curated memory with periodic nudges. Autonomous skill creation after complex tasks. Skills self-improve during use. FTS5 session search with LLM summarization for cross-session recall. <a href="https://github.com/plastic-labs/honcho">Honcho</a> dialectic user modeling. Compatible with the <a href="https://agentskills.io">agentskills.io</a> open standard.</td></tr>
-<tr><td><b>Scheduled automations</b></td><td>Built-in cron scheduler with delivery to any platform. Daily reports, nightly backups, weekly audits — all in natural language, running unattended.</td></tr>
-<tr><td><b>Delegates and parallelizes</b></td><td>Spawn isolated subagents for parallel workstreams. Write Python scripts that call tools via RPC, collapsing multi-step pipelines into zero-context-cost turns.</td></tr>
-<tr><td><b>Runs anywhere, not just your laptop</b></td><td>Seven terminal backends — local, Docker, SSH, Singularity, Modal, Daytona, and Vercel Sandbox. Daytona and Modal offer serverless persistence — your agent's environment hibernates when idle and wakes on demand, costing nearly nothing between sessions. Run it on a $5 VPS or a GPU cluster.</td></tr>
-<tr><td><b>Research-ready</b></td><td>Batch trajectory generation, trajectory compression for training the next generation of tool-calling models.</td></tr>
+<tr><td><b>Efficient by design</b></td><td><b>State-only O(1)</b> — system + <code>state.md</code> (&lt;2 KB) + current turn = ~17 KB (was 60 KB). Everything else (last turns, 10 MB <code>backup.md</code>) lives in FTS5 and is fetched via <code>recall_backup()</code> only when needed. <b>Lazy</b> AGENTS.md (30 KB→2 KB stub), lazy skills index (35 built-in, 25 optional via <code>mason skills install</code>), lazy tools — 89% prompt-cache hit. Tiny 0.5B (Qwen2-0.5B, ~400 MB) does memory/evolution grunt work so the main model stays cheap.</td></tr>
+<tr><td><b>Fast & cheap</b></td><td>Runs on a <b>$5 VPS</b> (11 GiB is enough for 0.5B + agent). Prompt caching + lazy loading = no latency tax. Local sidecar on :8080, no API cost for memory/evolution. Serverless backends (Modal/Daytona) hibernate when idle.</td></tr>
+<tr><td><b>Powerful & all-round</b></td><td>35 built-in skills out-of-box (code, docs, sheets, research, media) + 25 optional (creative, heavy). Subagents for parallel work, cron for automations, 7 terminal backends, research-ready trajectory capture. One agent for school, coding, and daily ops.</td></tr>
+<tr><td><b>A state-first terminal UI</b></td><td>Minimal Ink TUI showing the tiny <code>state.md</code> (auto-distilled <code>tool → outcome</code>), backup stats and short-term health, with live chat wired through <code>tui/bridge.py</code> into the real agent loop (<code>/recall</code>, <code>/state</code>, <code>/close</code>).</td></tr>
+<tr><td><b>Lives where you do</b></td><td>Telegram, Discord, Slack, WhatsApp, Signal, and CLI — all from a single gateway. Voice memos, cross-platform continuity.</td></tr>
+<tr><td><b>A closed learning loop</b></td><td>7×3000-char short-term (mem0) → Gbrain-style long-term (pages + facts + FTS5). Per-response avg-evo (0.5B) + nightly heavyweight (main model, queued). Skills self-improve via allowlisted patches.</td></tr>
+<tr><td><b>Scheduled automations</b></td><td>Built-in cron — daily reports, nightly evolution sweep (02:00), weekly audits — natural language, unattended, delivered to any platform.</td></tr>
+<tr><td><b>Delegates and parallelizes</b></td><td>Isolated subagents + <code>execute_code</code> RPC — multi-step pipelines in zero extra context.</td></tr>
 </table>
 
 ---
@@ -35,10 +36,10 @@ mason                    # start chatting!
 ```
 
 `mason onboard` is the installer UX: it verifies Python ≥3.11, git, ripgrep,
-node, llama-server, the 1B GGUF, and the TUI deps, writes a minimal
+node, llama-server, the 1B GGUF (~400 MB Qwen2-0.5B), and the TUI deps, writes a minimal
 `~/.mason/config.yaml` if you have none, and finishes with a real 1B smoke
 test. `--check-only` reports without writing anything. No API keys needed —
-the default brain is local (llama-server on :8080).
+the default brain is local (llama-server on :8080) and handles memory/evolution for free; main model is yours to pick.
 
 For the server side you need `llama-server` on PATH: `brew install llama.cpp`
 (macOS) or your distro package (`llama.cpp` on Arch), then run it in the
@@ -251,8 +252,7 @@ cd tui && npm install && MASON_PROVIDER=openai MASON_MODEL=<your-model> \
 #  and even that is gitignored. Main model is always yours.)
 ```
 
-Cold start per turn ≈ clarify + 3 bridge tools + name list (~1.7k tok).
-Everything else loads on describe and stays native via the working set.
+Cold start per turn ≈ 17 KB (13 KB stable identity + 4 KB AGENTS stub + lazy skills/tools) — ~1.7k tokens of tool schemas + 400 B lazy skill preview. Everything else (full AGENTS.md, skill bodies, backup) loads on demand via `read_file`/`skill_view`/`recall_backup` and stays cache-stable.
 
 ---
 

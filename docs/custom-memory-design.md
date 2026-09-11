@@ -8,7 +8,7 @@ Replace Mason built-in memory with a 2-tier system:
 
 ## 1. Short-Term Memory (`custom_memory/short_term/`)
 
-**Path:** `~/.custom-agent/short_term_memories/` (and `~/custom-agent/short_term_memories/` for template)
+**Path:** `~/.mason/short_term_memories/` (MASON_HOME, migrated from `~/custom-agent/short_term_memories/` legacy)
 - One file per day: `YYYY-MM-DD.md` (e.g. `2026-09-06.md`)
 - Format: clean markdown bullet points only:
   ```markdown
@@ -32,9 +32,9 @@ delete oldest.md
 Inspired by **Gbrain** (garrytan/gbrain) — take ONLY memory architecture, ignore self-evolution:
 - Gbrain core = Pages (markdown, frontmatter) + Facts (entity-linked, provenance) + Vectors (pgvector) + Graph edges (typed, zero-LLM)
 - Our minimal faithful port:
-  - Store: `long_term_memories/` markdown pages (one per entity/topic) + `long_term.db` SQLite (FTS5 + vector stub)
+  - Store: `long_term_memories/` markdown pages (one per entity/topic) + `long_term.db` SQLite FTS5 + `facts.jsonl` + `edges.jsonl` (deterministic, no LLM)
   - Facts: `facts.jsonl` per entity, each {fact, provenance, created_at, entity, kind}
-  - Search: FTS5 keyword (tsvector analogue) + optional vector via ollama:nomic-embed-text (768d) if available, RRF fusion
+  - Search: FTS5 keyword (keyword_exact evidence, budget-packed via recall_backup/recall); optional vector via ollama:nomic-embed-text if available
   - Graph: lightweight edges `edges.jsonl` — {src, dst, relation} extracted via deterministic regex (no LLM): `works_at`, `founded`, `invested_in`, `attended`
   - No dream cycle, no consolidation cron, no self-evolution — explicit promote only.
 - Verbs (subset of Gbrain MEMORY_VERBS v1): `remember`, `recall`, `forget`, `synthesize` (LLM synthesis via local 1B or fallback to proxy)
@@ -53,32 +53,22 @@ Inspired by **Gbrain** (garrytan/gbrain) — take ONLY memory architecture, igno
 
 ## 4. Integration with Custom Agent
 
-Replace `agent/memory_provider.py`:
-- New provider `custom_memory/provider.py` implements `MemoryProvider` ABC
-- Registers as `custom` in `agent/memory_manager.py`
-- Config: `memory.provider: custom` in `config.yaml`
-- Lifecycle: `init` creates folders, `remember` writes short-term, nightly `prune()` handles promotion
+Current status (lean, efficient):
+- `custom_memory/provider.py` implements `MemoryProvider` ABC (storage-complete: pages/facts/FTS/edges work).
+- Not yet auto-wired as `memory.provider=custom` — cross-session recall today is `session_search` + short-term Recent Memory injection (last 7-day file, 1.5K). Wiring is one config line when wanted.
+- Lifecycle: `sessions/manager.py:on_session_close` promotes backup→short-term (heuristic if 0.5B dormant, deduped), then purges session; `short_term/manager.py:prune()` enforces 7-file cap and promotes oldest→long-term via promoter.
 
 ## 5. File Layout
 
 ```
 ~/custom-agent/custom_memory/
-  __init__.py
-  short_term/
-    manager.py      # 7-file rolling, 3000 char cap
-    promoter.py     # llama.cpp evaluator
-  long_term/
-    store.py        # pages + facts + FTS
-    graph.py        # edge extraction
-    synthesize.py   # long-term Q&A
-  llm/
-    client.py       # llama.cpp wrapper (server or python binding)
-    config.yaml
-    models/         # GGUF 1B
-  provider.py       # MemoryProvider ABC impl
-  config.py
-~/custom-agent/short_term_memories/   # runtime (gitignored)
-~/custom-agent/long_term_memories/    # runtime
+  short_term/manager.py  # 7×3000 char, heuristic fallback when 0.5B dormant
+  long_term/store.py     # pages + facts.jsonl + FTS5 + edges.jsonl
+  llm/client.py          # llama.cpp :8080 wrapper
+  provider.py            # MemoryProvider (currently storage-complete, not auto-wired into prompt — cross-session recall via session_search/short_term preview)
+~/.mason/short_term_memories/   # runtime (7×3000, promoted at close, injected as Recent Memory)
+~/.mason/long_term_memories/    # runtime (Gbrain-style, provenance-tagged)
+~/.mason/sessions/<id>/         # per-session state.md (<2K) + backup.md (10M) + backup.db FTS5
 ```
 
 ## 6. Operational guarantees
@@ -87,3 +77,10 @@ Replace `agent/memory_provider.py`:
 - Bullet-only — reject non-bullet writes (auto-prefix)
 - Promotion is explicit + provenance-tagged
 - llama.cpp fallback: if model missing, promoter returns {promote: false} (safe) and synthesizer falls back to keyword search
+
+
+## 7. State history — the efficiency core (state-first O(1))
+- `sessions/<id>/state.md` (<2K) auto-injected into prompt + current turn only = ~17 KB (was 60 KB with AGENTS.md chain + 4-turn window).
+- `backup.md` (10M, append-only, FTS5 `backup.db`) holds full transcript, budget-packed via `recall_backup(query, budget_tokens=2000)`.
+- `turn_tool_round.py` auto-distills `tool(args…) → outcome` into `state.md` (newest-kept, 2K cap) so state stays fresh even if model forgets `write_state`.
+- Lazy: AGENTS.md 30K→2K stub + lazy skills index (35 built-in) keep the prompt cache-stable (89% hit).

@@ -27,22 +27,20 @@ Return JSON: {"issues": [{"type":"error|inaccuracy|format|missing_ctx","severity
 **Actions:**
 - `issues` with severity low/med → apply immediately via patch queue: `custom_evolution/patches/pending/*.jsonl` → `agent/patch_applier.py` applies skill/prompt/memory micro-fixes (char-level, no main model).
 - `hard_problem.queued=true` → push to `custom_evolution/queue/hard.jsonl` (title, reason, context snapshot). Avg-evo never calls main model.
-- Latency budget: <800ms via llama.cpp (1B, temp 0.2, max 256 tokens). Fire-and-forget — never blocks user response delivery. User sees final_response first, fixes land next turn or nightly.
+- Latency: fire-and-forget daemon thread, timeout ≥15s (config `avg_evo.timeout_ms`, clamped), temp 0.2, max 256 tokens — never blocks `final_response`. User sees final_response first, fixes land next turn or nightly.
 
 **Storage:**
 ```
 custom_evolution/
-  avg_evo/
-    analyzer.py      # 1B call
-    patcher.py       # micro-patches
-  queue/
-    hard.jsonl       # hard problems (avg-evo → nightly)
-    fixes.jsonl      # applied fixes log
+  avg_evo/analyzer.py, patcher.py  # 1B call + allowlisted patcher (summaries.json)
+  queue/hard.jsonl, fixes.jsonl    # hard queue + fix log
+  memory.jsonl                     # evolution memory (never re-propose)
+  nightly/sweep.py                 # 02:00 lightweight (always, 1B) + heavyweight (main, queued only)
 ```
 
 ## 2. Nightly-Dream-cycle — nightly sweep
 
-**Trigger:** cron `0 2 * * *` (2am local) or manual `python -m custom_evolution.nightly`.
+**Trigger:** cron `0 2 * * *` (2am) or `python custom_evolution/nightly/sweep.py .` — lightweight always (1B, refusal-aware, heuristic fallback), heavyweight only if `hard.jsonl` non-empty (main model via opencode-free).
 
 **Input:** full day's `short_term_memories/YYYY-MM-DD.md` + `queue/hard.jsonl` + `avg_evo` fix log + `long_term_memories/facts.jsonl` delta.
 
