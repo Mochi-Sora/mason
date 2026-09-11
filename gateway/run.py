@@ -5340,6 +5340,13 @@ def main():
     os.environ.setdefault("AI_AGENT", "mason-agent")
     os.environ.setdefault("MASON_AGENT", "true")
 
+    # Keep the 0.5B sidecar alive as long as the gateway runs (in-process supervisor)
+    try:
+        from tiered_memory.llm.client import ensure_keepalive as _ensure_1b
+        _ensure_1b()
+    except Exception:
+        pass
+
     def _register_identity() -> None:
         # Ledger registration + Windows job-object attach so update-time reapers can identify this gateway.
         from mason_cli.process_identity import attach_self_to_kill_on_close_job, register_self

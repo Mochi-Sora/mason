@@ -8,6 +8,115 @@ import os, pathlib, json, urllib.request
 CONFIG_PATH = pathlib.Path(__file__).parent / "config.yaml"
 DEFAULT_MODEL = "models/qwen2-0_5b-instruct-q4_k_m.gguf"  # ~400MB
 
+# — Keep-alive supervisor: Mason itself keeps the 0.5B sidecar alive as long as the framework runs.
+# Started lazily on first LlamaClient(). No external LaunchAgent/systemd required, but doesn't conflict if one exists.
+_KEEPALIVE_THREAD = None
+_KEEPALIVE_PROC = None
+_KEEPALIVE_RUNNING = False
+
+def _health_ok(base_url: str = "http://127.0.0.1:8080", timeout: int = 3) -> bool:
+    try:
+        with urllib.request.urlopen(base_url.rstrip("/") + "/health", timeout=timeout) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+def _find_llama_server() -> str | None:
+    import shutil
+    for cand in ["llama-server", "/opt/homebrew/bin/llama-server", "/usr/local/bin/llama-server", "/usr/bin/llama-server", "/usr/local/lib/ollama/llama-server"]:
+        if shutil.which(cand):
+            return cand
+        if pathlib.Path(cand).exists():
+            return cand
+    return shutil.which("llama-server")
+
+def _spawn_server(model_path: str, base_url: str = "http://127.0.0.1:8080") -> bool:
+    global _KEEPALIVE_PROC
+    # Don't spawn if already healthy (external LaunchAgent/systemd owns it)
+    if _health_ok(base_url):
+        return True
+    mp = pathlib.Path(model_path)
+    if not mp.exists():
+        # Try repo root model path
+        alt = pathlib.Path(__file__).parent / DEFAULT_MODEL
+        if alt.exists():
+            mp = alt
+        else:
+            return False
+    srv = _find_llama_server()
+    if not srv:
+        return False
+    # Parse port from base_url
+    import urllib.parse as _up
+    try:
+        port = str(_up.urlparse(base_url).port or 8080)
+    except Exception:
+        port = "8080"
+    cmd = [srv, "-m", str(mp), "--port", port, "--ctx-size", "2048", "-t", "4"]
+    try:
+        import subprocess
+        # Detached, logs to /tmp/llama.log
+        log = open("/tmp/llama.log", "a")
+        _KEEPALIVE_PROC = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+        # Wait briefly for health
+        import time
+        for _ in range(15):
+            time.sleep(0.5)
+            if _health_ok(base_url):
+                return True
+        return _health_ok(base_url)
+    except Exception:
+        return False
+
+def _keepalive_loop(base_url: str = "http://127.0.0.1:8080", interval: int = 30):
+    import time, threading
+    global _KEEPALIVE_RUNNING
+    while _KEEPALIVE_RUNNING:
+        try:
+            if not _health_ok(base_url):
+                # Try to find model path from default location
+                mp = str(pathlib.Path(__file__).parent / DEFAULT_MODEL)
+                # Also try mason's repo root if running from install
+                try:
+                    from pathlib import Path as _P
+                    alt = _P(__file__).resolve().parents[2] / "tiered_memory" / "llm" / "models" / "qwen2-0_5b-instruct-q4_k_m.gguf"
+                    if alt.exists():
+                        mp = str(alt)
+                except Exception:
+                    pass
+                _spawn_server(mp, base_url)
+        except Exception:
+            pass
+        # Sleep interval, but wake early if stopped
+        for _ in range(interval * 2):
+            if not _KEEPALIVE_RUNNING:
+                break
+            time.sleep(0.5)
+
+def ensure_keepalive(base_url: str = "http://127.0.0.1:8080") -> None:
+    """Start the keep-alive thread (idempotent). Call once at framework startup."""
+    global _KEEPALIVE_THREAD, _KEEPALIVE_RUNNING
+    if os.environ.get("MASON_1B_AUTOSTART", "1").lower() in ("0","false","no","off"):
+        return
+    if _KEEPALIVE_THREAD and _KEEPALIVE_THREAD.is_alive():
+        return
+    # Don't start if health already ok and thread would be redundant? Still start to watch for future death.
+    _KEEPALIVE_RUNNING = True
+    # Try immediate spawn if down (don't wait 30s for first check)
+    if not _health_ok(base_url):
+        try:
+            mp = str(pathlib.Path(__file__).parent / DEFAULT_MODEL)
+            _spawn_server(mp, base_url)
+        except Exception:
+            pass
+    import threading
+    _KEEPALIVE_THREAD = threading.Thread(target=_keepalive_loop, args=(base_url,), daemon=True, name="mason-1b-keepalive")
+    _KEEPALIVE_THREAD.start()
+
+def stop_keepalive() -> None:
+    global _KEEPALIVE_RUNNING
+    _KEEPALIVE_RUNNING = False
+
 class LlamaClient:
     def __init__(self, model_path: str = "", base_url: str = "http://127.0.0.1:8080",
                  model: str = ""):
@@ -21,6 +130,11 @@ class LlamaClient:
             if env_url:
                 self.base_url = env_url.rstrip("/")
         self._llama = None
+        # Keep the sidecar alive as long as the framework runs — fire-and-forget
+        try:
+            ensure_keepalive(self.base_url)
+        except Exception:
+            pass
 
     def _try_server(self, prompt: str, max_tokens=256, temperature=0.2, stop=None,
                     timeout: int = 120) -> str | None:

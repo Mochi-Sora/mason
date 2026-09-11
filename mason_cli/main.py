@@ -3325,6 +3325,13 @@ def main():
     except Exception:
         pass
 
+    # Keep the 0.5B sidecar alive as long as the framework runs (in-process supervisor, no LaunchAgent needed)
+    try:
+        from tiered_memory.llm.client import ensure_keepalive as _ensure_1b
+        _ensure_1b()
+    except Exception:
+        pass
+
     # Checkout changed since last launch → sweep stale __pycache__ once so no
     # process resolves fresh source against old bytecode. Never raises.
     _sweep_stale_bytecode_if_checkout_changed()
