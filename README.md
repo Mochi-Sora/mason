@@ -3,7 +3,7 @@
 </p>
 
 # Mason ◈
-> Detached fork of [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research (MIT) — rebranded, stripped to core, and rebuilt for **efficiency first**: state-first O(1) prompts, lazy everything, and a tiny local 0.5B for grunt work. Powerful and all-round (35 built-in skills, 25 more on demand), yet fast and cheap enough for a $5 VPS. Maintained by [Mochi Sora](https://github.com/Mochi-Sora).
+> Efficient, fast and cheap — yet powerful and all-round — self-improving agent. State-first O(1) prompts, lazy everything, and a tiny local 0.5B for grunt work (35 built-in skills, 25 more on demand). Fast enough for a $5 VPS, powerful enough for daily ops and code. Maintained by [Mochi Sora](https://github.com/Mochi-Sora).
 
 **The efficient, fast and cheap — yet powerful, all-round — self-improving agent.** State-first O(1) prompts (17 KB vs 60 KB: only `state.md` + current turn in context, 10 MB indexed backup on demand), lazy AGENTS.md (30 KB→2 KB stub) + lazy skills (35 built-in, 25 optional on demand) + lazy tools (89% cache hit), and a tiny 0.5B local LLM (llama.cpp :8080) for memory, evolution and grunt work. Cheap on a $5 VPS, powerful across code/docs/research/media. Talk to it from Telegram while it works on a cloud VM.
 
