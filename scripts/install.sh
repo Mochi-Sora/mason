@@ -7,7 +7,7 @@ set -eu
 REPO="Mochi-Sora/Mason-Agent"
 MASON_HOME="${MASON_HOME:-$HOME/.mason}"
 
-info() { printf "\033[1;34m→ %s\033[0m\n" "$*"; }
+info() { printf "\033[1;36m→ %s\033[0m\n" "$*"; }
 ok()   { printf "\033[1;32m✓ %s\033[0m\n" "$*"; }
 warn() { printf "\033[1;33m⚠ %s\033[0m\n" "$*"; }
 

@@ -7,7 +7,15 @@ def cmd_onboard(args) -> int:
     from mason_cli.onboard import run, render
     report = run(check_only=bool(getattr(args, "check_only", False)),
                  fetch=bool(getattr(args, "yes", False)))
-    print(render(report))
+    out = render(report)
+    # Render Rich markup when available, else plain
+    try:
+        from rich.console import Console
+        Console().print(out)
+    except Exception:
+        # Strip Rich tags for plain fallback
+        import re as _re
+        print(_re.sub(r"\[/?[^\]]*\]", "", out))
     return 0 if report["ready"] else 1
 
 

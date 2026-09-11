@@ -236,6 +236,39 @@ def run(*, check_only: bool = False, fetch: bool = False,
 
 
 def render(report: Dict[str, Any]) -> str:
+    # Use the active skin's midnight cyan-indigo so onboard matches the TUI/banner (not Hermes gold)
+    try:
+        from mason_cli.skin_engine import get_active_skin
+        _skin = get_active_skin()
+        _ok_col = _skin.get_color("ui_ok", "#34d399")
+        _err_col = _skin.get_color("ui_error", "#f87171")
+        _title_col = _skin.get_color("banner_title", "#22d3ee")
+        _dim_col = _skin.get_color("banner_dim", "#64748b")
+        _use_rich = True
+    except Exception:
+        _ok_col = _err_col = _title_col = _dim_col = ""
+        _use_rich = False
+    # Rich markup when available, else plain
+    try:
+        from rich.console import Console as _Console
+        from rich.text import Text as _Text
+        _has_rich = True
+    except Exception:
+        _has_rich = False
+    if _use_rich and _has_rich:
+        # Build rich output but return plain string for callers that print it — we'll also support direct console print
+        lines = []
+        lines.append(f"[bold {_title_col}]Mason onboard — {'check' if report.get('check_only') else 'setup'}[/]")
+        for s in report["steps"]:
+            col = _ok_col if s["ok"] else _err_col
+            mark = "✓" if s["ok"] else "✗"
+            lines.append(f"  [[{col}]{mark}[/]] [{col}]{s['name']}[/]: {s['msg']}")
+            if not s["ok"] and s.get("fix"):
+                for fl in s["fix"].splitlines():
+                    lines.append(f"       [{_dim_col}]→ {fl}[/]" if _dim_col else f"       → {fl}")
+        lines.append(f"[bold {_ok_col}]READY ✓ — run `mason` to chat.[/]" if report["ready"] else f"[bold {_err_col}]NOT READY — fix the ✗ rows above, then re-run `mason onboard`.[/]")
+        return "\n".join(lines)
+    # Fallback plain (no rich / no skin)
     lines = ["Mason onboard — " + ("check" if report.get("check_only") else "setup")]
     for s in report["steps"]:
         mark = "✓" if s["ok"] else "✗"
