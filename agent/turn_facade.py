@@ -142,7 +142,7 @@ class TurnFacadeMixin:
             # Skipped only for interrupted turns (no final response to judge).
             try:
                 if not terminal.get("interrupted"):
-                    from custom_evolution.hook import on_response
+                    from self_evolution.hook import on_response
                     _evo_final = terminal.get("final_response", "") if terminal else ""
                     _evo_user = user_message if isinstance(user_message, str) else str(user_message or "")
                     on_response(None, _evo_user, _evo_final,

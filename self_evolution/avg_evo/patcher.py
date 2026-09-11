@@ -4,7 +4,7 @@ Allowlist (auto-apply): tools/index/summaries.json — one-line manifest edits
 are low-blast-radius and machine-verifiable (listing still builds).
 Everything else stays pending for human / nightly-heavy review.
 
-Each decision lands in custom_evolution/memory.jsonl (the evolution memory):
+Each decision lands in self_evolution/memory.jsonl (the evolution memory):
 {ts, key, kind: applied|rejected|failed|deferred, target, summary, outcome}.
 The nightly reads it so it never re-proposes what was decided.
 
@@ -28,7 +28,7 @@ SET_RE = re.compile(r"SET\s+tools/index/summaries\.json\[(?P<name>[A-Za-z0-9_\-]
 def _deferral_count(base: pathlib.Path, key: str) -> int:
     try:
         n = 0
-        for line in (base / "custom_evolution" / "memory.jsonl").read_text().splitlines():
+        for line in (base / "self_evolution" / "memory.jsonl").read_text().splitlines():
             try:
                 j = json.loads(line)
                 if j.get("key") == key and j.get("kind") == "deferred":
@@ -42,7 +42,7 @@ def _deferral_count(base: pathlib.Path, key: str) -> int:
 
 def _mem(base: pathlib.Path, key: str, kind: str, target: str, summary: str, outcome: str = "") -> None:
     try:
-        with open(base / "custom_evolution" / "memory.jsonl", "a") as f:
+        with open(base / "self_evolution" / "memory.jsonl", "a") as f:
             f.write(json.dumps({"ts": datetime.datetime.utcnow().isoformat(), "key": key,
                                 "kind": kind, "target": target,
                                 "summary": summary[:300], "outcome": outcome[:300]}) + "\n")
@@ -99,7 +99,7 @@ def _validate(base: pathlib.Path, fix: str, llm_client, timeout: int) -> tuple[b
     if llm_client is None:
         return False, "", "no 1B client — human review required"
     try:
-        from custom_evolution.tasks.patch_apply_task import build_prompt
+        from self_evolution.tasks.patch_apply_task import build_prompt
         prompt = build_prompt(fix, "tools/index/summaries.json")
         try:
             raw = llm_client.complete(prompt, max_tokens=200, temperature=0.1, timeout=timeout)
@@ -117,8 +117,8 @@ def _validate(base: pathlib.Path, fix: str, llm_client, timeout: int) -> tuple[b
 def apply_pending(base: pathlib.Path, dry_run=True, llm_client=None, timeout: int = 60) -> list[str]:
     """Process patches/pending. Returns human-readable outcome lines."""
     base = pathlib.Path(base)
-    pending_dir = base / "custom_evolution" / "patches" / "pending"
-    applied_dir = base / "custom_evolution" / "patches" / "applied"
+    pending_dir = base / "self_evolution" / "patches" / "pending"
+    applied_dir = base / "self_evolution" / "patches" / "applied"
     applied_dir.mkdir(parents=True, exist_ok=True)
     outcomes: list[str] = []
     for p in sorted(pending_dir.glob("*.json")):

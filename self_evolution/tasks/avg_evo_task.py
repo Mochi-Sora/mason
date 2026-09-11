@@ -1,5 +1,5 @@
 """Task: Avg-evo — per-response fixer (1B — qwen2-0_5b via llama.cpp)
-Called by: custom_evolution/avg_evo/analyzer.py — every agent final_response.
+Called by: self_evolution/avg_evo/analyzer.py — every agent final_response.
 Job: catch small problems NOW, escalate hard ones to the nightly heavyweight.
 You are small: be strict, be literal, never redesign — patch or queue.
 """

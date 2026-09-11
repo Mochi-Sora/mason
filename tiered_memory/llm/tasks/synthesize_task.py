@@ -1,5 +1,5 @@
 """Task: Long-term synthesize — answer with citations (1B)
-Called by: custom_memory/long_term/synthesize.py.
+Called by: tiered_memory/long_term/synthesize.py.
 Job: answer STRICTLY from the given facts. Never invent. Say what is missing.
 """
 PROMPT = """You answer only from the facts below. Nothing else.

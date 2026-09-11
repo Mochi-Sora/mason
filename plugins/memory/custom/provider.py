@@ -1,5 +1,5 @@
-"""Custom memory provider — wraps custom_memory/provider.py"""
-from custom_memory.provider import CustomMemoryProvider as _Base
+"""Custom memory provider — wraps tiered_memory/provider.py"""
+from tiered_memory.provider import CustomMemoryProvider as _Base
 from agent.memory_provider import MemoryProvider
 
 class CustomProvider(MemoryProvider):
@@ -9,7 +9,7 @@ class CustomProvider(MemoryProvider):
     def initialize(self, *a, **kw):
         return self._base.initialize(*a, **kw) if hasattr(self._base, 'initialize') else None
     def system_prompt_block(self, *a, **kw):
-        # short-term preview is already via custom_memory, keep empty here
+        # short-term preview is already via tiered_memory, keep empty here
         return ""
     def prefetch(self, query: str, **kw):
         res = self._base.recall(query=query)

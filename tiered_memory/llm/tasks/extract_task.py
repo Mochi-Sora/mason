@@ -1,5 +1,5 @@
 """Task: mem0-style ADD-only extraction (1B — qwen2-0_5b via llama.cpp)
-Called by: custom_memory/short_term/manager.py — every remember.
+Called by: tiered_memory/short_term/manager.py — every remember.
 Why ADD-only (mem0 2026): never rewrite history; dedup happens at recall.
 """
 PROMPT = """You extract durable facts. Nothing else.

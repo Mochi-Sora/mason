@@ -40,7 +40,7 @@ from agent.turn_finalizer import finalize_turn
 from sessions.container import append_backup as _sess_append_backup
 # Avg-evo evolution hook (Custom Agent) — fire-and-forget 1B fixer, never blocks
 try:
-    from custom_evolution.hook import on_response as _evo_on_response
+    from self_evolution.hook import on_response as _evo_on_response
     _EVO_ENABLED = True
 except Exception:
     _EVO_ENABLED = False

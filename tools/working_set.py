@@ -218,8 +218,8 @@ def predict_async(session_id: str, user_text: str, turn_key: str) -> None:
 
     def _run() -> None:
         try:
-            from custom_memory.llm.tasks.tool_predict_task import build_prompt
-            from custom_memory.llm.client import LlamaClient
+            from tiered_memory.llm.tasks.tool_predict_task import build_prompt
+            from tiered_memory.llm.client import LlamaClient
             prompt = build_prompt(user_text[:600])
             out = LlamaClient().complete(prompt, max_tokens=60)
             text = str(out or "")
@@ -280,7 +280,7 @@ def refresh_tool_summaries(llm_1b: Any = None, limit: int = 5) -> Dict[str, str]
                 desc = str(fn.get("description", "") or "").strip()
             if not desc:
                 continue  # nothing to summarize from — leave the placeholder
-            from custom_memory.llm.tasks.tool_summary_task import build_prompt
+            from tiered_memory.llm.tasks.tool_summary_task import build_prompt
             sibs = ", ".join(
                 f"{n} ({str(current.get(n, ''))[:40]})"
                 for n in list(current)[:8] if n != name)

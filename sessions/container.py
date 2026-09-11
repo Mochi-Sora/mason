@@ -157,8 +157,8 @@ def recall_backup(session_id: str, query: str, budget_tokens: int = 2000, limit:
 def _trigger_summary(session_id: str):
     # delegate to 1B compressor (fire-and-forget)
     try:
-        from custom_memory.llm.tasks.backup_compress_task import build_prompt
-        from custom_memory.llm.client import LlamaClient
+        from tiered_memory.llm.tasks.backup_compress_task import build_prompt
+        from tiered_memory.llm.client import LlamaClient
         d = _session_dir(session_id)
         md = d / "backup.md"
         text = md.read_text()

@@ -31,7 +31,7 @@ export*
 # Custom memory runtime
 /short_term_memories/
 /long_term_memories/
-/custom_memory/llm/models/*.gguf
+/tiered_memory/llm/models/*.gguf
 
 # Mason: never commit dependency trees or bytecode
 node_modules/
@@ -43,8 +43,8 @@ __pycache__/
 /sessions/*
 !/sessions/*.py
 !/sessions/__init__.py
-/custom_evolution/nightly/
-/custom_evolution/queue/
-/custom_evolution/patches/
-custom_evolution/evolution.log
+/self_evolution/nightly/
+/self_evolution/queue/
+/self_evolution/patches/
+self_evolution/evolution.log
 .bytecode-fingerprint

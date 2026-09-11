@@ -1,7 +1,7 @@
 """Cron wrapper for Nightly-Dream-cycle — called at 02:00"""
 import pathlib
-from custom_evolution.nightly.sweep import run_nightly
-from custom_memory.llm.client import LlamaClient
+from self_evolution.nightly.sweep import run_nightly
+from tiered_memory.llm.client import LlamaClient
 
 def main():
     base = pathlib.Path(__file__).parent.parent

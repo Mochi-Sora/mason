@@ -117,12 +117,12 @@ class TestProtocol:
 # ── 1B task prompts build ──────────────────────────────────────────
 class TestTaskPrompts:
     def test_predict_builds(self):
-        from custom_memory.llm.tasks.tool_predict_task import build_prompt
+        from tiered_memory.llm.tasks.tool_predict_task import build_prompt
         out = build_prompt("read main.py")
         assert "read_file" in out and "{text}" not in out
 
     def test_summary_builds(self):
-        from custom_memory.llm.tasks.tool_summary_task import build_prompt
+        from tiered_memory.llm.tasks.tool_summary_task import build_prompt
         out = build_prompt("recall_backup", "Search backup", "read_state (tiny state)")
         assert "recall_backup" in out and "{name}" not in out
 

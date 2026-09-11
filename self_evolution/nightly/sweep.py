@@ -3,8 +3,8 @@
 - Heavyweight only if hard queue non-empty (main model)
 """
 import pathlib, datetime, json, re
-from custom_evolution.tasks.nightly_light_task import build_prompt as light_prompt
-from custom_evolution.tasks.nightly_heavy_task import build_prompt as heavy_prompt
+from self_evolution.tasks.nightly_light_task import build_prompt as light_prompt
+from self_evolution.tasks.nightly_heavy_task import build_prompt as heavy_prompt
 
 _REFUSAL_RE = re.compile(
     r"(?i)\bi['’]m sorry\b|cann?ot (assist|help)\b|can['’]t (assist|help)\b"
@@ -20,9 +20,9 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
     date = date or datetime.date.today().isoformat()
     base = pathlib.Path(base)
     st_dir = base / "short_term_memories"
-    queue = base / "custom_evolution" / "queue" / "hard.jsonl"
-    fixes_log = base / "custom_evolution" / "queue" / "fixes.jsonl"
-    nightly_dir = base / "custom_evolution" / "nightly"
+    queue = base / "self_evolution" / "queue" / "hard.jsonl"
+    fixes_log = base / "self_evolution" / "queue" / "fixes.jsonl"
+    nightly_dir = base / "self_evolution" / "nightly"
     nightly_dir.mkdir(parents=True, exist_ok=True)
 
     # Collect today's bullets
@@ -32,7 +32,7 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
             bullets += f.read_text() + "\n"
     fixes = fixes_log.read_text()[-1200:] if fixes_log.exists() else "(no fixes today)"
     # tool errors: grep from evolution.log
-    elog = base / "custom_evolution" / "evolution.log"
+    elog = base / "self_evolution" / "evolution.log"
     errors = ""
     if elog.exists():
         for line in elog.read_text().splitlines()[-20:]:
@@ -45,7 +45,7 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
     # never re-proposes what was already decided.
     evo_memory = ""
     try:
-        _mem = base / "custom_evolution" / "memory.jsonl"
+        _mem = base / "self_evolution" / "memory.jsonl"
         if _mem.exists():
             _lines = _mem.read_text().splitlines()[-10:]
             _bits = []
@@ -101,7 +101,7 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
 
     # === Pending micro-patches: validate + apply safe ones (1B-gated) ===
     try:
-        from custom_evolution.avg_evo.patcher import apply_pending
+        from self_evolution.avg_evo.patcher import apply_pending
         _outcomes = apply_pending(base, dry_run=False, llm_client=llm_1b)
         result["patches"] = _outcomes
         with open(out_light, "a") as f:
@@ -130,7 +130,7 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
         (heavy_dir / "heavy.md").write_text(heavy_out)
         result["heavy"] = str(heavy_dir / "heavy.md")
         # archive queue
-        arch = base / "custom_evolution" / "queue" / "archive" / f"{date}.jsonl"
+        arch = base / "self_evolution" / "queue" / "archive" / f"{date}.jsonl"
         arch.parent.mkdir(parents=True, exist_ok=True)
         arch.write_text(qtxt)
         queue.write_text("")
@@ -138,13 +138,13 @@ def run_nightly(base: pathlib.Path, llm_1b=None, main_client=None, date: str | N
         result["heavy_skipped"] = "main model unavailable — queue preserved"
 
     # log
-    with open(base / "custom_evolution" / "evolution.log", "a") as f:
+    with open(base / "self_evolution" / "evolution.log", "a") as f:
         f.write(json.dumps({"type":"nightly","ts":datetime.datetime.utcnow().isoformat(),"date":date,"has_queue":bool(has_queue)})+"\n")
 
     return result
 
 if __name__ == "__main__":
     import sys
-    from custom_memory.llm.client import LlamaClient
+    from tiered_memory.llm.client import LlamaClient
     base = pathlib.Path(sys.argv[1]) if len(sys.argv)>1 else pathlib.Path(".")
     print(run_nightly(base, llm_1b=LlamaClient()))

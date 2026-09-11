@@ -1,5 +1,5 @@
 """Task: Nightly-Dream-cycle — heavyweight (MAIN MODEL ONLY, never the 1B)
-Called by: custom_evolution/nightly/sweep.py — ONLY when queue/hard.jsonl is non-empty.
+Called by: self_evolution/nightly/sweep.py — ONLY when queue/hard.jsonl is non-empty.
 Job: solve what avg-evo escalated, with full reasoning. Thorough beats short here.
 Router rule: if you are the 1B model reading this file, STOP — this task is not
 yours. Only the main model runs nightly_heavy_task.

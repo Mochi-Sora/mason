@@ -1,5 +1,5 @@
 """Task: Short-term → Long-term promoter (1B — qwen2-0_5b via llama.cpp)
-Called by: custom_memory/short_term/promoter.py — for notes older than 7 days.
+Called by: tiered_memory/short_term/promoter.py — for notes older than 7 days.
 Job: keep ONLY facts still useful in the future. When unsure, do NOT promote.
 """
 SYSTEM = "You are a memory curator. You output JSON only."

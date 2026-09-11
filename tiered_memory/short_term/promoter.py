@@ -1,6 +1,6 @@
 """Promoter: expired short-term (older than 7d) → long-term via 1B LLM"""
 import json, pathlib
-from custom_memory.llm.tasks.promoter_task import build_prompt
+from tiered_memory.llm.tasks.promoter_task import build_prompt
 
 def evaluate(content: str, filename: str, llm_client=None) -> dict:
     if llm_client is None:

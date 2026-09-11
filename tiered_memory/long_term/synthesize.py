@@ -1,6 +1,6 @@
 """synthesize: Gbrain-style answer with citations (via 1B or fallback)"""
 from .store import recall as lt_recall
-from custom_memory.llm.tasks.synthesize_task import build_prompt
+from tiered_memory.llm.tasks.synthesize_task import build_prompt
 
 def synthesize(base, question: str, llm_client=None, limit=5) -> str:
     res = lt_recall(base, query=question, limit=limit)

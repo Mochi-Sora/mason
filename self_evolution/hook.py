@@ -1,9 +1,9 @@
 """Hook: fire Avg-evo after every agent final_response — fire-and-forget.
 
-Usage: from custom_evolution.hook import on_response
+Usage: from self_evolution.hook import on_response
        on_response(base, user_msg, final_response, tool_trace="", messages=None)
 
-Respects custom_evolution/config.yaml avg_evo.enabled. Timeout comes from
+Respects self_evolution/config.yaml avg_evo.enabled. Timeout comes from
 config timeout_ms, clamped to ≥15s (an 800ms cap would turn every CPU-1B call
 into a no-op); the thread is daemonic and never blocks the turn either way.
 """
@@ -20,7 +20,7 @@ def _config(base: pathlib.Path) -> dict:
     if key not in _CONFIG_CACHE:
         cfg: dict = {}
         try:
-            text = (base / "custom_evolution" / "config.yaml").read_text()
+            text = (base / "self_evolution" / "config.yaml").read_text()
             m = re.search(r"avg_evo:\s*\n((?:[ \t]+\S.*\n?)+)", text)
             if m:
                 for line in m.group(1).splitlines():
@@ -71,8 +71,8 @@ def on_response(base: pathlib.Path | None, user_msg: str, final_response: str,
         except Exception:
             tool_trace = ""
     try:
-        from custom_memory.llm.client import LlamaClient
-        from custom_evolution.avg_evo.analyzer import handle_response
+        from tiered_memory.llm.client import LlamaClient
+        from self_evolution.avg_evo.analyzer import handle_response
         llm = LlamaClient()
 
         def _run():

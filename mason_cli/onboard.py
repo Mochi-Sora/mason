@@ -35,7 +35,7 @@ def repo_root() -> Path:
 
 
 def model_dest() -> Path:
-    return repo_root() / "custom_memory" / "llm" / "models" / MODEL_FILE
+    return repo_root() / "tiered_memory" / "llm" / "models" / MODEL_FILE
 
 
 def mason_home() -> Path:
@@ -176,7 +176,7 @@ def smoke() -> Dict[str, Any]:
     """One real 1B completion. Slow on CPU is fine — proves the path works."""
     try:
         sys.path.insert(0, str(repo_root()))
-        from custom_memory.llm.client import LlamaClient
+        from tiered_memory.llm.client import LlamaClient
         c = LlamaClient()
         try:
             healthy = bool(c.health().get("server"))

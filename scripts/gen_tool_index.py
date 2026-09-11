@@ -4,7 +4,7 @@
 The index is the searchable home of every tool schema. Runtime reads:
   - summaries.json overrides schema descriptions in the bridge manifest
     (tools/tool_search_catalog.py); the 1B model keeps these lines sharp
-    (see custom_memory/llm/tasks/tool_summary_task.py + nightly sweep).
+    (see tiered_memory/llm/tasks/tool_summary_task.py + nightly sweep).
   - <name>.json holds the full native schema for docs/diffing.
 
 New tools: implement + register normally, re-run this script, done — they

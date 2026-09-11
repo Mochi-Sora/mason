@@ -56,7 +56,7 @@ def _extract_facts_mem0(text: str, llm_client=None) -> list[str]:
                 if len(p)>30 and len(p.split())>4:
                     parts.append(p)
         return parts[:3] if parts else [c for c in cleaned[:1] if len(c)>20]
-    from custom_memory.llm.tasks.extract_task import build_prompt as extract_prompt
+    from tiered_memory.llm.tasks.extract_task import build_prompt as extract_prompt
     prompt = extract_prompt(text)
     try:
         raw = llm_client.complete(prompt, max_tokens=256, temperature=0.2)

@@ -7,8 +7,8 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
     # 1) read backup via indexed recall (not raw 10M)
     # Use llm to extract facts
     try:
-        from custom_memory.llm.client import LlamaClient
-        from custom_memory.llm.tasks.session_promote_task import build_prompt
+        from tiered_memory.llm.client import LlamaClient
+        from tiered_memory.llm.tasks.session_promote_task import build_prompt
         d = get_sessions_root() / session_id
         backup = (d / "backup.md").read_text() if (d / "backup.md").exists() else ""
         if not backup.strip():
@@ -38,12 +38,12 @@ def on_session_close(session_id: str, base: pathlib.Path | None = None):
     if not facts and isinstance(_backup_for_fallback, str) and _backup_for_fallback.strip():
         # LLM dormant (no server/GGUF) or returned no JSON — heuristic so close still promotes
         try:
-            from custom_memory.short_term.manager import _extract_facts_mem0
+            from tiered_memory.short_term.manager import _extract_facts_mem0
             facts = _extract_facts_mem0(_backup_for_fallback, llm_client=None)
         except Exception:
             facts = []
     # 2) promote to short-term (intact)
-    from custom_memory.short_term.manager import remember as st_remember
+    from tiered_memory.short_term.manager import remember as st_remember
     for f in facts[:5]:
         try:
             st_remember(base, f, llm_client=None)  # heuristic fallback ok at close

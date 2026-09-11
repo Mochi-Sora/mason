@@ -1,5 +1,5 @@
 """Task: Patch apply — validate an avg-evo micro-fix before it touches disk (1B)
-Called by: custom_evolution/avg_evo/patcher.py.
+Called by: self_evolution/avg_evo/patcher.py.
 Job: gatekeeper. A bad patch MUST come back valid=false. You are the last check.
 """
 PROMPT = """You validate one micro-patch. Nothing else.
@@ -34,7 +34,7 @@ PATCH: recall_backup summary says backup.db but file is backup.md
 OUTPUT: {{"valid": true, "fixed_patch": "SET tools/index/summaries.json[recall_backup] = search this session's indexed backup file", "reason": "one-line manifest correction"}}
 
 EXAMPLE (reject):
-TARGET: custom_memory/llm/tasks/extract_task.py
+TARGET: tiered_memory/llm/tasks/extract_task.py
 PATCH: change '"Max 3 facts' to 'Max 5 facts'
 OUTPUT: {{"valid": false, "fixed_patch": "", "reason": "contradicts the ADD-only max-3 contract; not a typo fix"}}
 

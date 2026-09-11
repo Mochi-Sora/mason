@@ -165,7 +165,7 @@ No docs site on a detached fork — the repo is the docs:
 | `tools/index/INDEX.md` | Every tool, one line each (regenerate: `scripts/gen_tool_index.py`) |
 | `skills/autonomous-ai-agents/mason-agent/` | What Mason knows about itself (hub + routing) |
 | `AGENTS.md` + `agent/` `mason_cli/` `tools/` `gateway/` `cron/` `skills/` `AGENTS.md` | Contributor internals per area |
-| `docs/custom-memory-design.md` | Custom memory/evolution/state design |
+| `docs/memory-design.md` | Custom memory/evolution/state design |
 | `mason --help`, `mason <command> --help` | Full command reference |
 
 ---
@@ -233,7 +233,7 @@ scripts/run_tests.sh
 
 ```bash
 # 1. Local 1B sidecar (memory, evolution, predictions) — direct llama.cpp:
-#    drop any qwen2-0_5b GGUF into custom_memory/llm/models/, then:
+#    drop any qwen2-0_5b GGUF into tiered_memory/llm/models/, then:
 systemctl --user enable --now mason-1b   # unit shipped in scripts/ (port 8080)
 #    Alt backend (ollama): export MASON_1B_URL=http://127.0.0.1:11434 MASON_1B_MODEL=qwen2:0.5b
 
@@ -247,7 +247,7 @@ python scripts/gen_model_catalog.py   # mason_cli/model_catalog_builtin.json (of
 #    retrain with: python scripts/train_wakeword.py --positive data/positive --negative data/negative
 
 # 4. Nightly evolution (02:00 recommended):
-0 2 * * * cd ~/custom-agent && python custom_evolution/nightly/sweep.py .
+0 2 * * * cd ~/custom-agent && python self_evolution/nightly/sweep.py .
 
 # 5. State lives in ~/.mason (profiles: ~/.mason/profiles/<name>).
 #    Per-profile warm tool sets: ~/.mason/working_sets.json (auto-maintained).

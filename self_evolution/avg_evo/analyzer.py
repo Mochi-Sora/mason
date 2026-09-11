@@ -10,7 +10,7 @@ import hashlib
 import json
 import pathlib
 import datetime
-from custom_evolution.tasks.avg_evo_task import build_prompt
+from self_evolution.tasks.avg_evo_task import build_prompt
 
 FIXES_RETAIN = 500
 DEDUP_WINDOW = 200
@@ -48,7 +48,7 @@ def _issue_key(iss: dict) -> str:
 def _recent_keys(base: pathlib.Path) -> set:
     keys = set()
     try:
-        lines = (base / "custom_evolution" / "queue" / "fixes.jsonl").read_text().splitlines()
+        lines = (base / "self_evolution" / "queue" / "fixes.jsonl").read_text().splitlines()
         for line in lines[-DEDUP_WINDOW:]:
             try:
                 iss = (json.loads(line) or {}).get("issue") or {}
@@ -59,8 +59,8 @@ def _recent_keys(base: pathlib.Path) -> set:
                 continue
     except OSError:
         pass
-    for d in (base / "custom_evolution" / "patches" / "pending",
-              base / "custom_evolution" / "patches" / "applied"):
+    for d in (base / "self_evolution" / "patches" / "pending",
+              base / "self_evolution" / "patches" / "applied"):
         try:
             for p in d.glob("*.json"):
                 try:
@@ -73,7 +73,7 @@ def _recent_keys(base: pathlib.Path) -> set:
         except OSError:
             continue
     try:
-        mem = base / "custom_evolution" / "memory.jsonl"
+        mem = base / "self_evolution" / "memory.jsonl"
         if mem.exists():
             for line in mem.read_text().splitlines()[-DEDUP_WINDOW:]:
                 try:
@@ -114,7 +114,7 @@ def analyze(user_msg: str, assistant_final: str, tool_trace: str = "", llm_clien
 def handle_response(base: pathlib.Path, user_msg: str, assistant_final: str, tool_trace: str = "",
                     llm_client=None, timeout: int = 45):
     res = analyze(user_msg, assistant_final, tool_trace, llm_client, timeout)
-    evo = base / "custom_evolution"
+    evo = base / "self_evolution"
     queue = evo / "queue"
     queue.mkdir(parents=True, exist_ok=True)
     seen = _recent_keys(base)
@@ -156,7 +156,7 @@ def _rotate(path: pathlib.Path, keep: int) -> None:
 
 
 def _enqueue_hard(base, hp, user_msg, assistant_final, tool_trace):
-    p = base / "custom_evolution" / "queue" / "hard.jsonl"
+    p = base / "self_evolution" / "queue" / "hard.jsonl"
     p.parent.mkdir(parents=True, exist_ok=True)
     lines = p.read_text().splitlines() if p.exists() else []
     if len(lines) >= 50:

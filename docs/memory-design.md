@@ -1,12 +1,12 @@
-# Custom Memory System — Design (Custom Agent)
+# Tiered Memory — Design (Mason)
 
 ## Goals
-Replace Mason built-in memory with a 2-tier system:
+Two-tier memory (mem0 short-term + Gbrain long-term) replacing Mason built-in:
 - Short-term: 7-day rolling .md bullet journal (human-readable, bounded)
 - Long-term: Gbrain-inspired durable store (no self-evolution/dream cycle)
 - Evaluator: 1B local LLM via llama.cpp promotes expired short-term → long-term
 
-## 1. Short-Term Memory (`custom_memory/short_term/`)
+## 1. Short-Term Memory (`tiered_memory/short_term/`)
 
 **Path:** `~/.mason/short_term_memories/` (MASON_HOME, migrated from `~/custom-agent/short_term_memories/` legacy)
 - One file per day: `YYYY-MM-DD.md` (e.g. `2026-09-06.md`)
@@ -28,7 +28,7 @@ if promote: → long_term.remember(facts, provenance="short-term:2026-08-30.md")
 delete oldest.md
 ```
 
-## 2. Long-Term Memory (`custom_memory/long_term/`)
+## 2. Long-Term Memory (`tiered_memory/long_term/`)
 Inspired by **Gbrain** (garrytan/gbrain) — take ONLY memory architecture, ignore self-evolution:
 - Gbrain core = Pages (markdown, frontmatter) + Facts (entity-linked, provenance) + Vectors (pgvector) + Graph edges (typed, zero-LLM)
 - Our minimal faithful port:
@@ -39,13 +39,13 @@ Inspired by **Gbrain** (garrytan/gbrain) — take ONLY memory architecture, igno
   - No dream cycle, no consolidation cron, no self-evolution — explicit promote only.
 - Verbs (subset of Gbrain MEMORY_VERBS v1): `remember`, `recall`, `forget`, `synthesize` (LLM synthesis via local 1B or fallback to proxy)
 
-## 3. Local LLM — llama.cpp global (`custom_memory/llm/`)
+## 3. Local LLM — llama.cpp global (`tiered_memory/llm/`)
 
 **llama.cpp** is the global inference layer, not just memory:
 - Binary: `llama.cpp` built from source or via `llama-cpp-python` (pip)
 - Model: 1B GGUF — `Qwen/Qwen2-0.5B-Instruct-GGUF` or `TinyLlama-1.1B-Chat` (~600MB, fits VPS 11GiB)
 - Server: `llama-server` on 127.0.0.1:8080 (OpenAI-compatible) OR direct `llama_cpp.Llama` Python binding
-- Global config: `custom_memory/llm/config.yaml` → {model_path, n_ctx 2048, n_threads 2, temp 0.2}
+- Global config: `tiered_memory/llm/config.yaml` → {model_path, n_ctx 2048, n_threads 2, temp 0.2}
 - Used by:
   - Short-term promoter (binary yes/no + fact extraction)
   - Long-term synthesizer (answer with citations)
@@ -54,14 +54,14 @@ Inspired by **Gbrain** (garrytan/gbrain) — take ONLY memory architecture, igno
 ## 4. Integration with Custom Agent
 
 Current status (lean, efficient):
-- `custom_memory/provider.py` implements `MemoryProvider` ABC (storage-complete: pages/facts/FTS/edges work).
+- `tiered_memory/provider.py` implements `MemoryProvider` ABC (storage-complete: pages/facts/FTS/edges work).
 - Not yet auto-wired as `memory.provider=custom` — cross-session recall today is `session_search` + short-term Recent Memory injection (last 7-day file, 1.5K). Wiring is one config line when wanted.
 - Lifecycle: `sessions/manager.py:on_session_close` promotes backup→short-term (heuristic if 0.5B dormant, deduped), then purges session; `short_term/manager.py:prune()` enforces 7-file cap and promotes oldest→long-term via promoter.
 
 ## 5. File Layout
 
 ```
-~/custom-agent/custom_memory/
+~/custom-agent/tiered_memory/
   short_term/manager.py  # 7×3000 char, heuristic fallback when 0.5B dormant
   long_term/store.py     # pages + facts.jsonl + FTS5 + edges.jsonl
   llm/client.py          # llama.cpp :8080 wrapper

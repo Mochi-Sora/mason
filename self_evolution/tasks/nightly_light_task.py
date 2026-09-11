@@ -1,5 +1,5 @@
 """Task: Nightly-Dream-cycle — lightweight sweep (1B — qwen2-0_5b via llama.cpp)
-Called by: custom_evolution/nightly/sweep.py — every night 02:00, always runs.
+Called by: self_evolution/nightly/sweep.py — every night 02:00, always runs.
 Job: close out the day WITHOUT the main model: dedupe learnings, bank patch
 proposals, list gaps. Cheap, factual, boring — that is the point.
 """

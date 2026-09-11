@@ -1,5 +1,5 @@
 """Task: Memory recall — hybrid search reranking (1B)
-Called by: custom_memory/long_term/store.py when a query needs rerank.
+Called by: tiered_memory/long_term/store.py when a query needs rerank.
 Caller contract: every fact line starts with "[id] " (e.g. "[f12] Marco ...").
 Job: order best-first. Nothing else.
 """

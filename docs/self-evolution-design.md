@@ -1,4 +1,4 @@
-# Self-Evolution — Avg-evo + Nightly-Dream-cycle (Custom Agent)
+# Self-Evolution — Avg-evo + Nightly Sweep (Mason)
 
 ## Principles (not Gbrain)
 - No Gbrain dream/consolidation. This is bespoke: per-response 1B fixes + nightly sweep.
@@ -25,13 +25,13 @@ Return JSON: {"issues": [{"type":"error|inaccuracy|format|missing_ctx","severity
 ```
 
 **Actions:**
-- `issues` with severity low/med → apply immediately via patch queue: `custom_evolution/patches/pending/*.jsonl` → `agent/patch_applier.py` applies skill/prompt/memory micro-fixes (char-level, no main model).
-- `hard_problem.queued=true` → push to `custom_evolution/queue/hard.jsonl` (title, reason, context snapshot). Avg-evo never calls main model.
+- `issues` with severity low/med → apply immediately via patch queue: `self_evolution/patches/pending/*.jsonl` → `agent/patch_applier.py` applies skill/prompt/memory micro-fixes (char-level, no main model).
+- `hard_problem.queued=true` → push to `self_evolution/queue/hard.jsonl` (title, reason, context snapshot). Avg-evo never calls main model.
 - Latency: fire-and-forget daemon thread, timeout ≥15s (config `avg_evo.timeout_ms`, clamped), temp 0.2, max 256 tokens — never blocks `final_response`. User sees final_response first, fixes land next turn or nightly.
 
 **Storage:**
 ```
-custom_evolution/
+self_evolution/
   avg_evo/analyzer.py, patcher.py  # 1B call + allowlisted patcher (summaries.json)
   queue/hard.jsonl, fixes.jsonl    # hard queue + fix log
   memory.jsonl                     # evolution memory (never re-propose)
@@ -40,17 +40,17 @@ custom_evolution/
 
 ## 2. Nightly-Dream-cycle — nightly sweep
 
-**Trigger:** cron `0 2 * * *` (2am) or `python custom_evolution/nightly/sweep.py .` — lightweight always (1B, refusal-aware, heuristic fallback), heavyweight only if `hard.jsonl` non-empty (main model via opencode-free).
+**Trigger:** cron `0 2 * * *` (2am) or `python self_evolution/nightly/sweep.py .` — lightweight always (1B, refusal-aware, heuristic fallback), heavyweight only if `hard.jsonl` non-empty (main model via opencode-free).
 
 **Input:** full day's `short_term_memories/YYYY-MM-DD.md` + `queue/hard.jsonl` + `avg_evo` fix log + `long_term_memories/facts.jsonl` delta.
 
 **Two tiers:**
 - **Lightweight (always, 1B):** sweep all short-term bullets + tool errors + low/med fixes that weren't applied. Generates `evolution_report.md` with: deduped learnings, prompt tweaks, skill patch proposals (diffs). Cost: ~2k tokens via 1B, <30s.
-- **Heavyweight (only if queue non-empty, main model):** for each `hard.jsonl` entry, call main model (via `opencode-free` proxy at 127.0.0.1:8765 or configured provider) with full context to produce high-level evolution: new skill draft, architecture refactor plan, or long-term memory consolidation. Output → `custom_evolution/nightly/heavy/*.md`. Then clear queue (archive to `queue/archive/YYYY-MM-DD.jsonl`).
+- **Heavyweight (only if queue non-empty, main model):** for each `hard.jsonl` entry, call main model (via `opencode-free` proxy at 127.0.0.1:8765 or configured provider) with full context to produce high-level evolution: new skill draft, architecture refactor plan, or long-term memory consolidation. Output → `self_evolution/nightly/heavy/*.md`. Then clear queue (archive to `queue/archive/YYYY-MM-DD.jsonl`).
 
 **Output:**
 ```
-custom_evolution/nightly/
+self_evolution/nightly/
   2026-09-06-report.md       # lightweight report (1B)
   2026-09-06-heavy/          # heavyweight outputs (main model, only if queued)
   evolution.log              # append-only
@@ -58,11 +58,11 @@ custom_evolution/nightly/
 
 ## 3. Global 1B wiring
 
-- Single `LlamaClient` from `custom_memory/llm/client.py` — reused for memory promoter, Avg-evo, nightly lightweight.
-- Configurable via `custom_evolution/config.yaml`: `avg_evo.enabled, nightly.hour, heavyweight.model`.
+- Single `LlamaClient` from `tiered_memory/llm/client.py` — reused for memory promoter, Avg-evo, nightly lightweight.
+- Configurable via `self_evolution/config.yaml`: `avg_evo.enabled, nightly.hour, heavyweight.model`.
 
 ## 4. Safety
 
-- No auto-delete of user memories — evolution only proposes patches, writes to `patches/pending/` for review. Nightly heavyweight drafts are *proposals* in `custom_evolution/nightly/` — human or `curator` approves.
+- No auto-delete of user memories — evolution only proposes patches, writes to `patches/pending/` for review. Nightly heavyweight drafts are *proposals* in `self_evolution/nightly/` — human or `curator` approves.
 - Hard queue is bounded: max 50 entries; oldest dropped with log.
-- All evolution runs are logged: `custom_evolution/evolution.log` (JSONL).
+- All evolution runs are logged: `self_evolution/evolution.log` (JSONL).
