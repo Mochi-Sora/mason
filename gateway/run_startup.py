@@ -587,8 +587,14 @@ class GatewayStartupMixin:
     @staticmethod
     def _start_hosted_room_worker_sync():
         """Start the local Group Chat worker without importing the dashboard."""
-        import tui_gateway.server  # noqa: F401
-        from tui_gateway import methods_groups
+        try:
+            import tui_gateway.server  # noqa: F401
+            from tui_gateway import methods_groups
+        except ModuleNotFoundError:
+            # tui_gateway is optional — gateway (Telegram/Discord) works without it
+            import logging
+            logging.getLogger("gateway.run").debug("tui_gateway not installed — Group Chat worker skipped (gateway still runs)")
+            return None
         service = methods_groups.get_hosted_room_service()
         if service is None:
             service = methods_groups.start_hosted_room_service()
@@ -600,17 +606,31 @@ class GatewayStartupMixin:
         return service
 
     async def _ensure_hosted_room_worker(self):
-        return await asyncio.to_thread(self._start_hosted_room_worker_sync)
+        svc = await asyncio.to_thread(self._start_hosted_room_worker_sync)
+        if svc is None:
+            # Optional worker not available — don't treat as failure
+            return None
+        return svc
 
     async def _hosted_room_worker_watcher(self, interval: float = 1.0) -> None:
         """Keep the room worker alive for the messaging gateway lifetime."""
         while self._running:
-            await self._ensure_hosted_room_worker()
+            try:
+                await self._ensure_hosted_room_worker()
+            except ModuleNotFoundError:
+                # tui_gateway missing — stop watching, gateway still healthy
+                return
+            except Exception:
+                # Other errors are already logged in _start_... — keep retrying
+                pass
             await asyncio.sleep(interval)
 
     async def _stop_hosted_room_worker(self, timeout: float = 5.0) -> bool:
         """Pause room execution durably without interrupting accepted turns."""
-        from tui_gateway import methods_groups
+        try:
+            from tui_gateway import methods_groups
+        except ModuleNotFoundError:
+            return True
         return await asyncio.to_thread(methods_groups.stop_hosted_room_service, timeout=timeout)
 
     def _start_loop_heartbeat_task(self) -> None:
