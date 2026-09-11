@@ -22,33 +22,40 @@ Use any model you want — OpenRouter, OpenAI, your own endpoint, and many other
 
 ---
 
-## Quick Install
+## Quick Install — one line, everything included (400MB 0.5B auto-fetched, no manual `llama-server`)
 
 ### Linux, macOS, WSL2
+```bash
+curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.sh | sh
+# then: mason
+```
+
+### Windows (native, PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install.ps1 | iex
+# then: mason
+```
+
+### Android / Termux
+```bash
+curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/mason/main/scripts/install-termux.sh | sh
+```
+
+One line does everything: `uv` + Python 3.11 + Mason + 400MB Qwen2-0.5B (`llama-server` :8080) + `~/.mason/config.yaml` + smoke test. First run downloads the model (one-time, resumable) — wait a minute, then `mason` to chat. No API keys needed — local 0.5B handles memory/evolution for free.
+
+<details><summary>Manual / dev install (git clone)</summary>
 
 ```bash
 git clone https://github.com/Mochi-Sora/mason.git && cd mason
 python -m venv .venv && source .venv/bin/activate
 pip install -e "."
-mason onboard            # checks deps, prints what's missing + how to fix
-mason onboard --yes      # also downloads the ~400MB 1B model (HuggingFace)
-mason                    # start chatting!
+mason onboard --yes      # same 400MB fetch + config
+mason
 ```
+For dev: `uv pip install -e ".[all,dev]"` + `scripts/run_tests.sh`. TUI: `cd tui && npm install` (checked by onboard).
+</details>
 
-`mason onboard` is the installer UX: it verifies Python ≥3.11, git, ripgrep,
-node, llama-server, the 1B GGUF (~400 MB Qwen2-0.5B), and the TUI deps, writes a minimal
-`~/.mason/config.yaml` if you have none, and finishes with a real 1B smoke
-test. `--check-only` reports without writing anything. No API keys needed —
-the default brain is local (llama-server on :8080) and handles memory/evolution for free; main model is yours to pick.
-
-For the server side you need `llama-server` on PATH: `brew install llama.cpp`
-(macOS) or your distro package (`llama.cpp` on Arch), then run it in the
-background: `llama-server -m custom_memory/llm/models/qwen2-0_5b-instruct-q4_k_m.gguf --port 8080`.
-For the Ink TUI: `cd tui && npm install` (checked by onboard).
-
-### Windows (native, PowerShell)
-
-> **Heads up:** Native Windows runs Mason without WSL — CLI, gateway, TUI, and tools all work natively. If you'd rather use WSL2, the Linux/macOS instructions above work there too.
+> **Heads up:** Native Windows runs Mason without WSL — CLI, gateway, TUI, and tools all work natively. If you'd rather use WSL2, the Linux/macOS one-liner works there too.
 
 Run this in PowerShell (with `$env:MASON_REPO_URL` set to your Mason remote):
 
