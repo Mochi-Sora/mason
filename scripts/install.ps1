@@ -2392,8 +2392,9 @@ function Install-Repository {
         git config --global windows.appendAtomically false 2>$null
 
         # Try SSH first, then HTTPS, with -c flag for atomic write fix
-        # Detached Mason fork: MASON_REPO_URL must point at your Mason repo.
-        if (-not $env:MASON_REPO_URL) { throw "No Mason repo configured. Set `$env:MASON_REPO_URL to your Mason git remote and re-run." }
+        # Repo URLs default to this fork (see $RepoUrlSsh/$RepoUrlHttps above);
+        # $env:MASON_REPO_URL only overrides them, so the published one-liner
+        # works with no environment at all.
         Write-Info "Trying SSH clone..."
         $env:GIT_SSH_COMMAND = "ssh -o BatchMode=yes -o ConnectTimeout=5"
         try {

@@ -1593,11 +1593,9 @@ EOF
         # Try SSH first (for private repo access), fall back to HTTPS
         # GIT_SSH_COMMAND disables interactive prompts and sets a short timeout
         # so SSH fails fast instead of hanging when no key is configured.
-        # Detached Mason fork: MASON_REPO_URL must point at your Mason repo.
-        if [ -z "${MASON_REPO_URL:-}" ]; then
-            log_error "No Mason repo configured. Set MASON_REPO_URL to your Mason git remote and re-run."
-            exit 1
-        fi
+        # Repo URLs default to this fork (see REPO_URL_SSH/REPO_URL_HTTPS above);
+        # MASON_REPO_URL only overrides them, so the published one-liner works
+        # with no environment at all.
         log_info "Trying SSH clone..."
         if GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5" \
            git clone --depth 1 --branch "$BRANCH" "$REPO_URL_SSH" "$INSTALL_DIR" 2>/dev/null; then
