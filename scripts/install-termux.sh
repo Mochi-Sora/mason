@@ -1,44 +1,85 @@
 #!/usr/bin/env sh
-# Mason one-line installer — Android / Termux
-# Usage: curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install-termux.sh | sh
-# What it does: pkg deps + uv + Python 3.11 + Mason (termux extra) + 400MB 0.5B — one line.
-
+# ============================================================================
+# Mason Agent Installer - Android / Termux
+# ============================================================================
+# Usage:
+#   curl -fsSL https://raw.githubusercontent.com/Mochi-Sora/Mason-Agent/main/scripts/install-termux.sh | sh
+#
+# Termux is a first-class target of the main installer (scripts/install.sh):
+# it knows the Termux package deps, creates the venv with Termux's own Python,
+# clones the repo, installs it editable, and walks the
+# [termux-all] -> [termux] -> core extras ladder with constraints-termux.txt.
+#
+# So this entry point does NOT reimplement any of that. It bootstraps the few
+# tools needed to *fetch and run* install.sh (pkg is the only package manager
+# on Termux and needs no root), then hands over to it. Dependencies are
+# installed before the framework on every platform, Termux included.
+#
+# Overrides: MASON_REPO_SLUG, MASON_BRANCH, MASON_INSTALL_SH_URL, or any flag
+# install.sh accepts, e.g.
+#   curl -fsSL .../install-termux.sh | sh -s -- --no-venv --skip-setup
 set -eu
 
-REPO="Mochi-Sora/Mason-Agent"
+REPO_SLUG="${MASON_REPO_SLUG:-Mochi-Sora/Mason-Agent}"
+BRANCH="${MASON_BRANCH:-main}"
+INSTALL_SH_URL="${MASON_INSTALL_SH_URL:-https://raw.githubusercontent.com/$REPO_SLUG/$BRANCH/scripts/install.sh}"
 
-echo "→ Termux detected — installing Mason (termux extra, 400MB model)..."
-# Termux pkg deps (no sudo)
-pkg update -y 2>/dev/null || true
-pkg install -y python git curl ripgrep nodejs 2>/dev/null || pkg install -y python git curl 2>/dev/null || true
+info() { printf '\033[0;34m->\033[0m %s\n' "$*"; }
+ok()   { printf '\033[0;32m[ok]\033[0m %s\n' "$*"; }
+warn() { printf '\033[0;33m[!]\033[0m %s\n' "$*"; }
 
-# uv
-if ! command -v uv >/dev/null 2>&1; then
-  echo "→ Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
+if ! command -v pkg >/dev/null 2>&1; then
+    warn "pkg not found - this script is for Termux (Android)."
+    warn "On Linux/macOS/WSL2 use: scripts/install.sh"
 fi
-for p in "$HOME/.local/bin" "$HOME/.cargo/bin"; do
-  case ":$PATH:" in *":$p:"*) ;; *) export PATH="$p:$PATH" ;; esac
+
+# ---------------------------------------------------------------------------
+# 1. Bootstrap the tools install.sh needs to run: bash (it is a bash script),
+#    curl, git (the framework is installed from a clone), and TLS roots.
+# ---------------------------------------------------------------------------
+if command -v pkg >/dev/null 2>&1; then
+    info "Installing Termux prerequisites (bash, curl, git, ca-certificates)..."
+    pkg update -y >/dev/null 2>&1 || true
+    pkg install -y bash curl git ca-certificates >/dev/null 2>&1 \
+        || warn "pkg install failed - continuing with whatever is already installed"
+fi
+
+for tool in bash curl; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        warn "$tool is required but was not found on PATH"
+        exit 1
+    fi
 done
 
-# Mason — use [termux] extra (avoids Android-incompatible voice deps)
-echo "→ Installing Mason..."
-if ! uv python find 3.11 >/dev/null 2>&1; then
-  uv python install 3.11 2>/dev/null || true
-fi
-# Try termux extra first
-uv pip install "git+https://github.com/${REPO}.git#egg=mason-agent[termux]" --python 3.11 2>/dev/null || \
-uv pip install "git+https://github.com/${REPO}.git" --python 3.11 2>/dev/null || \
-pip install "git+https://github.com/${REPO}.git"
-
-echo "→ Onboarding (400MB 0.5B, one-time)..."
-if command -v mason >/dev/null 2>&1; then
-  mason onboard --yes 2>/dev/null || mason onboard 2>/dev/null || echo "⚠ onboard needs network — re-run: mason onboard --yes"
-else
-  uv run mason onboard --yes 2>/dev/null || echo "⚠ mason not on PATH — re-run: mason onboard --yes"
+# ---------------------------------------------------------------------------
+# 2. Download the real installer and run it.
+#    Downloaded to a file rather than piped into the shell: `curl | bash`
+#    executes a partially written script if the connection drops, and the
+#    reported error then points at a half-parsed line instead of the network.
+# ---------------------------------------------------------------------------
+tmp="$(mktemp 2>/dev/null || mktemp -t mason-install 2>/dev/null || echo /data/data/com.termux/files/usr/tmp/mason-install.sh)"
+info "Fetching $INSTALL_SH_URL"
+if ! curl -fsSL "$INSTALL_SH_URL" -o "$tmp"; then
+    warn "Could not download install.sh - check the network or \$MASON_INSTALL_SH_URL"
+    rm -f "$tmp" 2>/dev/null || true
+    exit 1
 fi
 
-echo "✓ Done — run: mason"
-echo "  mason              # chat"
-echo "  mason prompt-size  # verify ~17KB"
+# CRLF -> LF: a transfer that mangled line endings would otherwise trip
+# `set -e` on the first bash-ism in the script.
+if command -v tr >/dev/null 2>&1; then
+    tr -d '\r' < "$tmp" > "$tmp.lf" 2>/dev/null && mv "$tmp.lf" "$tmp" 2>/dev/null || true
+fi
+chmod +x "$tmp" 2>/dev/null || true
+ok "Installer downloaded"
+
+info "Installing dependencies first, then Mason..."
+rc=0
+bash "$tmp" "$@" || rc=$?
+rm -f "$tmp" 2>/dev/null || true
+
+if [ "$rc" -ne 0 ]; then
+    warn "Mason install failed (exit $rc)"
+    warn "Re-run with more detail: bash scripts/install.sh --skip-setup"
+fi
+exit "$rc"
